@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:ai.neogpt.club)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(npm create vite@latest . -- --template react-ts --yes)",
+      "Bash(npm create vite@latest . --template react-ts 2)",
+      "Bash(1:*)",
+      "Bash(npm install react-router-dom @supabase/supabase-js zustand lucide-react)",
+      "Bash(npm install -D tailwindcss@3 postcss autoprefixer)",
+      "Bash(npx tailwindcss init -p)",
+      "Bash(npm run build)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST \"https://api.supabase.com/v1/projects/ywkfkqkoauwslcmvnxid/database/query\" -H \"Authorization: Bearer sb_publishable_SMrd2zNqHjJl9i64Uu2P2g_Drmn1f6-\" -H \"Content-Type: application/json\" -d '{\"\"query\"\": \"\"SELECT 1\"\"}')",
+      "Bash(npx supabase@latest --version)",
+      "Bash(npx supabase login --token \"sb_publishable_SMrd2zNqHjJl9i64Uu2P2g_Drmn1f6-\")",
+      "Bash(git init)",
+      "Bash(git add .)",
+      "Bash(git commit -m \"Initial NanoGPT application\")",
+      "Bash(git config user.email \"nanogpt@deploy.com\")",
+      "Bash(git config user.name \"NanoGPT\")"
+    ]
+  }
+}
