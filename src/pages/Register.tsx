@@ -27,7 +27,7 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col max-w-md mx-auto px-5 relative overflow-hidden">
+    <div className="h-full bg-surface flex flex-col px-5 relative overflow-y-auto">
       {/* Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-56 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 

@@ -29,7 +29,7 @@ export default function BottomNav() {
             )}
             <div className={cn(
               'relative flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-200',
-              active ? 'bg-brand-500/15' : ''
+              active ? 'bg-brand-500/20' : ''
             )}>
               <Icon
                 size={20}

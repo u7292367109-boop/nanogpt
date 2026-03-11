@@ -29,7 +29,7 @@ export default function Task() {
 
   return (
     <Layout title="Task Center" showBack={false}>
-      <div className="px-4 pt-4 pb-24 space-y-4">
+      <div className="px-4 pt-4 pb-6 space-y-4">
 
         {/* Level tabs */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">

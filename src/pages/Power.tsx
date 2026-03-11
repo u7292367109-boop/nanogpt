@@ -30,7 +30,7 @@ export default function Power() {
 
   return (
     <Layout title="My Power" showBack={false}>
-      <div className="px-4 pt-4 pb-24 space-y-4">
+      <div className="px-4 pt-4 pb-6 space-y-4">
 
         {/* Stats */}
         <div className="card">

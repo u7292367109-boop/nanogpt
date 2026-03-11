@@ -3,7 +3,7 @@ import { Cpu, Users, ArrowRight, Zap, Shield } from 'lucide-react'
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-surface flex flex-col max-w-md mx-auto overflow-hidden relative">
+    <div className="h-full bg-surface flex flex-col overflow-y-auto relative">
 
       {/* Ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />

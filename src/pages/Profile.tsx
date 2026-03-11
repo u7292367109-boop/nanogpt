@@ -34,7 +34,7 @@ export default function Profile() {
 
   return (
     <Layout title="Profile" showBack={false}>
-      <div className="px-4 pt-4 pb-24 space-y-3">
+      <div className="px-4 pt-4 pb-6 space-y-3">
 
         {/* User card */}
         <div className="card flex items-center gap-4">

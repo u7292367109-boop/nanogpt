@@ -39,7 +39,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="px-4 pt-4 pb-24 space-y-4">
+      <div className="px-4 pt-4 pb-6 space-y-4">
 
         {/* Banner carousel */}
         <div className={`rounded-2xl bg-gradient-to-br ${banners[bannerIndex].gradient} p-5 min-h-[128px] flex flex-col justify-between border border-brand-500/10 transition-all duration-500`}>

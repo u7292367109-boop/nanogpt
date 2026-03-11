@@ -9,9 +9,9 @@
     padding: 0;
   }
 
-  html, body, #root {
+  html, body {
     height: 100%;
-    background-color: #060d08;
+    background-color: #030806;
     color: #ffffff;
     font-family: 'Manrope', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -20,8 +20,10 @@
   }
 
   #root {
+    height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   ::-webkit-scrollbar {
@@ -40,7 +42,7 @@
 
 @layer components {
   .page-container {
-    @apply min-h-screen bg-surface flex flex-col max-w-md mx-auto relative;
+    @apply h-full bg-surface flex flex-col overflow-hidden;
   }
 
   .card {
@@ -73,15 +75,15 @@
   }
 
   .bottom-nav {
-    @apply fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md
+    @apply w-full shrink-0
            bg-surface-card/95 backdrop-blur-md border-t border-surface-border
-           flex items-center justify-around px-1 z-50;
+           flex items-center justify-around px-1;
     padding-bottom: env(safe-area-inset-bottom, 8px);
     padding-top: 6px;
   }
 
   .nav-item {
-    @apply flex flex-col items-center gap-1 px-3 py-2 rounded-xl
+    @apply relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl
            text-gray-500 transition-all duration-200 min-w-[52px];
     font-size: 10px;
     font-weight: 600;

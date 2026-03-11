@@ -19,7 +19,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col max-w-md mx-auto px-6 py-10">
+    <div className="h-full bg-surface flex flex-col px-6 py-10 overflow-y-auto">
       <Link to="/login" className="flex items-center gap-1 text-gray-400 mb-8">
         <ChevronLeft size={20} />
         <span className="text-sm">Back to Login</span>

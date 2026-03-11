@@ -24,7 +24,7 @@ export default function Layout({
       {showTopBar && (
         <TopBar title={title} showBack={showBack} showActions={showActions} />
       )}
-      <main className={`flex-1 overflow-y-auto ${showBottomNav ? 'pb-20' : ''}`}>
+      <main className="flex-1 overflow-y-auto overscroll-contain">
         {children}
       </main>
       {showBottomNav && <BottomNav />}

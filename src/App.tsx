@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import AppShell from './components/AppShell'
 
 // Public pages
 import Landing from './pages/Landing'
@@ -32,6 +33,7 @@ import AboutUs from './pages/my/AboutUs'
 
 function App() {
   return (
+    <AppShell>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -68,6 +70,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </AppShell>
   )
 }
 
