@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Lock, CheckCircle, Loader2 } from 'lucide-react'
+import { Lock, CheckCircle, Loader2, ChevronRight } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { LEVEL_CONFIG, TASK_TYPES } from '../lib/utils'
@@ -8,21 +8,19 @@ const TABS = ['LV.0', 'LV.1', 'LV.2', 'LV.3', 'LV.4', 'LV.5', 'LV.6']
 
 export default function Task() {
   const { profile } = useAuth()
-  const [activeTab, setActiveTab] = useState(0)
+  const [activeTab, setActiveTab]     = useState(0)
   const [openingTask, setOpeningTask] = useState<string | null>(null)
-  const [message, setMessage] = useState('')
-  const userLevel = profile?.level ?? 0
+  const [message, setMessage]         = useState('')
+  const userLevel                     = profile?.level ?? 0
+  const currentLevel                  = LEVEL_CONFIG[activeTab]
 
-  const currentLevel = LEVEL_CONFIG[activeTab]
-
-  async function handleOpenTask(taskType: typeof TASK_TYPES[0]) {
-    if (userLevel < taskType.minLevel) {
-      setMessage(`Requires LV.${taskType.minLevel} or higher`)
+  async function handleOpenTask(task: typeof TASK_TYPES[0]) {
+    if (userLevel < task.minLevel) {
+      setMessage(`Requires LV.${task.minLevel} or higher`)
       setTimeout(() => setMessage(''), 3000)
       return
     }
-    setOpeningTask(taskType.type)
-    // In a real app, this would process payment and create order
+    setOpeningTask(task.type)
     await new Promise(r => setTimeout(r, 1500))
     setOpeningTask(null)
     setMessage('Task opened! Check your orders.')
@@ -31,18 +29,19 @@ export default function Task() {
 
   return (
     <Layout title="Task Center" showBack={false}>
-      <div className="px-4 pt-4 space-y-4">
+      <div className="px-4 pt-4 pb-24 space-y-4">
+
         {/* Level tabs */}
-        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {TABS.map((tab, i) => (
             <button
               key={tab}
               onClick={() => setActiveTab(i)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                 activeTab === i
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-surface-muted text-gray-400'
-              } ${i <= userLevel ? '' : 'opacity-50'}`}
+                  ? 'bg-brand-500 text-white shadow-brand-sm'
+                  : 'bg-surface-muted text-gray-500 border border-surface-border'
+              } ${i > userLevel ? 'opacity-40' : ''}`}
             >
               {tab}
             </button>
@@ -51,54 +50,46 @@ export default function Task() {
 
         {/* Level info card */}
         <div className="card">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-white font-semibold">{currentLevel.name}</p>
+              <p className="text-white font-extrabold text-base">{currentLevel.name}</p>
               <span className="level-badge mt-1 inline-block">LV.{activeTab}</span>
             </div>
-            {userLevel >= activeTab ? (
-              <CheckCircle size={24} className="text-green-400" />
-            ) : (
-              <Lock size={24} className="text-gray-600" />
-            )}
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${userLevel >= activeTab ? 'bg-brand-500/15 border border-brand-500/20' : 'bg-surface-muted'}`}>
+              {userLevel >= activeTab
+                ? <CheckCircle size={20} className="text-brand-400" />
+                : <Lock size={20} className="text-gray-600" />
+              }
+            </div>
           </div>
 
           {activeTab > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs text-gray-400 font-medium">Team Rewards</p>
+            <div>
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Team Rewards</p>
               <div className="flex gap-2">
                 {['A-Level', 'B-Level', 'C-Level'].map((tier, i) => (
-                  <div key={tier} className="flex-1 bg-surface-muted rounded-lg py-2 text-center">
-                    <p className="text-xs text-gray-500">{tier}</p>
-                    <p className="text-sm font-bold text-indigo-400">{currentLevel.teamRewards[i]}%</p>
+                  <div key={tier} className="flex-1 bg-surface-muted rounded-xl py-2.5 text-center border border-surface-border">
+                    <p className="text-xs text-gray-500 mb-0.5">{tier}</p>
+                    <p className="text-sm font-extrabold text-brand-400">{currentLevel.teamRewards[i]}%</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Progress requirements */}
           {activeTab >= 3 && (
-            <div className="mt-3 space-y-2 pt-3 border-t border-surface-border">
-              <p className="text-xs text-gray-400 font-medium">Requirements to unlock</p>
+            <div className="mt-4 space-y-2 pt-4 border-t border-surface-border">
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Unlock Requirements</p>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400">Invite A-level</span>
-                <span className="text-xs text-white">0 / {currentLevel.inviteA}</span>
+                <span className="text-xs text-brand-400 font-bold">0 / {currentLevel.inviteA}</span>
               </div>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: '0%' }} />
+              <div className="progress-bar"><div className="progress-fill" style={{ width: '0%' }} /></div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-400">Invite B+C level</span>
+                <span className="text-xs text-brand-400 font-bold">0 / {currentLevel.inviteBC}</span>
               </div>
-              {activeTab >= 3 && (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">Invite B+C level</span>
-                    <span className="text-xs text-white">0 / {currentLevel.inviteBC}</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: '0%' }} />
-                  </div>
-                </>
-              )}
+              <div className="progress-bar"><div className="progress-fill" style={{ width: '0%' }} /></div>
             </div>
           )}
         </div>
@@ -110,49 +101,52 @@ export default function Task() {
             {TASK_TYPES.map((task) => {
               const locked = userLevel < task.minLevel
               return (
-                <div key={task.type} className={`card ${locked ? 'opacity-60' : ''}`}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${task.color} flex items-center justify-center text-2xl`}>
-                        {task.emoji}
-                      </div>
-                      <div>
-                        <p className="text-white font-semibold">{task.label} Task</p>
-                        <p className="text-xs text-gray-400">{task.levelRange}</p>
-                      </div>
+                <div key={task.type} className={`card transition-opacity ${locked ? 'opacity-55' : ''}`}>
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${task.color} flex items-center justify-center text-2xl shrink-0`}>
+                      {task.emoji}
                     </div>
-                    {locked && <Lock size={16} className="text-gray-600 mt-1" />}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-white font-bold">{task.label} Task</p>
+                        {locked && <Lock size={14} className="text-gray-600" />}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{task.levelRange}</p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-4 bg-surface-muted rounded-xl p-3">
                     <div>
-                      <p className="text-xs text-gray-400">Total Return</p>
-                      <p className="text-amber-400 font-bold">{task.returnRange}</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Total Return</p>
+                      <p className="text-amber-400 font-extrabold text-sm">{task.returnRange}</p>
                     </div>
+                    <div className="w-px h-8 bg-surface-border" />
                     <div className="text-right">
-                      <p className="text-xs text-gray-400">Investment</p>
-                      <p className="text-white font-bold">{task.price} USDT</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Investment</p>
+                      <p className="text-white font-extrabold text-sm">{task.price} USDT</p>
+                    </div>
+                    <div className="w-px h-8 bg-surface-border" />
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 mb-0.5">Min Level</p>
+                      <p className="text-brand-400 font-extrabold text-sm">LV.{task.minLevel}</p>
                     </div>
                   </div>
 
                   <button
                     onClick={() => handleOpenTask(task)}
                     disabled={!!openingTask || locked}
-                    className={`w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2
+                    className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all
                       ${locked
-                        ? 'bg-surface-muted text-gray-500 cursor-not-allowed'
-                        : `bg-gradient-to-r ${task.color} text-white`
+                        ? 'bg-surface-muted text-gray-600 cursor-not-allowed border border-surface-border'
+                        : `bg-gradient-to-r ${task.color} text-white shadow-brand-sm active:scale-[0.98]`
                       }`}
                   >
                     {openingTask === task.type ? (
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 size={15} className="animate-spin" />
                     ) : locked ? (
-                      <>
-                        <Lock size={14} />
-                        Requires LV.{task.minLevel}
-                      </>
+                      <><Lock size={13} /> Requires LV.{task.minLevel}</>
                     ) : (
-                      `Open Now (${task.price} USDT)`
+                      <>Open Task — {task.price} USDT <ChevronRight size={14} /></>
                     )}
                   </button>
                 </div>
@@ -161,8 +155,9 @@ export default function Task() {
           </div>
         </div>
 
+        {/* Toast notification */}
         {message && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-sm px-4 py-2 rounded-full shadow-lg z-50">
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-brand-500 text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-brand z-50 fade-in whitespace-nowrap">
             {message}
           </div>
         )}

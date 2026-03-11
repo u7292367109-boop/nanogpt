@@ -72,8 +72,8 @@ export default function KYC() {
           </div>
         ) : (
           <>
-            <div className="card bg-indigo-500/10 border-indigo-500/20">
-              <p className="text-indigo-300 text-xs font-semibold mb-1">Why verify?</p>
+            <div className="card bg-brand-500/10 border-brand-500/20">
+              <p className="text-brand-300 text-xs font-semibold mb-1">Why verify?</p>
               <p className="text-gray-400 text-xs leading-relaxed">
                 KYC verification unlocks higher withdrawal limits and enhanced security features for your account.
               </p>

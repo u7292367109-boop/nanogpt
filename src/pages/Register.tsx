@@ -4,12 +4,12 @@ import { Eye, EyeOff, Cpu, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Register() {
-  const [form, setForm] = useState({ username: '', email: '', password: '', referralCode: '' })
+  const [form, setForm]             = useState({ username: '', email: '', password: '', referralCode: '' })
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { signUp } = useAuth()
-  const navigate = useNavigate()
+  const [error, setError]           = useState('')
+  const [loading, setLoading]       = useState(false)
+  const { signUp }                  = useAuth()
+  const navigate                    = useNavigate()
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
@@ -18,39 +18,39 @@ export default function Register() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
-    }
+    if (form.password.length < 6) { setError('Password must be at least 6 characters'); return }
     setLoading(true)
     const { error } = await signUp(form.email, form.password, form.username, form.referralCode)
     setLoading(false)
-    if (error) {
-      setError(error.message || 'Registration failed')
-    } else {
-      navigate('/home')
-    }
+    if (error) setError(error.message || 'Registration failed. Please try again.')
+    else navigate('/home')
   }
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col max-w-md mx-auto px-6 py-10">
-      <div className="flex items-center gap-2 mb-10">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-          <Cpu size={18} className="text-white" />
+    <div className="min-h-screen bg-surface flex flex-col max-w-md mx-auto px-5 relative overflow-hidden">
+      {/* Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-56 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Logo */}
+      <div className="flex items-center gap-2 pt-14 relative">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-brand-sm">
+          <Cpu size={17} className="text-white" />
         </div>
-        <span className="font-bold text-white text-xl">NanoGPT</span>
+        <span className="font-extrabold text-white text-xl tracking-tight">NanoGPT</span>
       </div>
 
-      <h2 className="text-2xl font-bold text-white mb-1">Create Account</h2>
-      <p className="text-gray-400 text-sm mb-8">Join the AI computing revolution</p>
+      <div className="relative mt-8 mb-8">
+        <h2 className="text-3xl font-extrabold text-white tracking-tight mb-1">Create Account</h2>
+        <p className="text-gray-500 text-sm">Join the AI computing revolution</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 relative">
         {[
-          { name: 'username', label: 'Username', placeholder: 'Choose a username', type: 'text' },
-          { name: 'email', label: 'Email', placeholder: 'Enter your email', type: 'email' },
-        ].map(({ name, label, placeholder, type }) => (
+          { name: 'username', label: 'Username',   placeholder: 'Choose a username',  type: 'text',  ac: 'username' },
+          { name: 'email',    label: 'Email',       placeholder: 'your@email.com',     type: 'email', ac: 'email' },
+        ].map(({ name, label, placeholder, type, ac }) => (
           <div key={name}>
-            <label className="text-xs text-gray-400 mb-1.5 block">{label}</label>
+            <label className="text-xs text-gray-400 font-bold mb-1.5 block uppercase tracking-wider">{label}</label>
             <input
               name={name}
               type={type}
@@ -59,30 +59,35 @@ export default function Register() {
               value={form[name as keyof typeof form]}
               onChange={handleChange}
               required
+              autoComplete={ac}
             />
           </div>
         ))}
 
         <div>
-          <label className="text-xs text-gray-400 mb-1.5 block">Password</label>
+          <label className="text-xs text-gray-400 font-bold mb-1.5 block uppercase tracking-wider">Password</label>
           <div className="relative">
             <input
               name="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="At least 6 characters"
-              className="input-field pr-10"
+              className="input-field pr-12"
               value={form.password}
               onChange={handleChange}
               required
+              autoComplete="new-password"
             />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            <button type="button" onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 active:text-gray-300">
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
           </div>
         </div>
 
         <div>
-          <label className="text-xs text-gray-400 mb-1.5 block">Referral Code <span className="text-gray-600">(optional)</span></label>
+          <label className="text-xs text-gray-400 font-bold mb-1.5 block uppercase tracking-wider">
+            Referral Code <span className="text-gray-600 normal-case font-normal">(optional)</span>
+          </label>
           <input
             name="referralCode"
             type="text"
@@ -94,22 +99,28 @@ export default function Register() {
         </div>
 
         {error && (
-          <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
+          <div className="py-3 px-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+            <p className="text-red-400 text-sm font-medium">{error}</p>
+          </div>
         )}
 
-        <button type="submit" disabled={loading} className="btn-primary flex items-center justify-center gap-2 mt-2">
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary shadow-brand mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
           {loading ? <Loader2 size={18} className="animate-spin" /> : 'Create Account'}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-400">
+      <p className="mt-6 text-center text-sm text-gray-500 relative">
         Already have an account?{' '}
-        <Link to="/login" className="text-indigo-400 font-medium">Sign In</Link>
+        <Link to="/login" className="text-brand-400 font-bold">Sign In</Link>
       </p>
 
-      <p className="mt-4 text-center text-xs text-gray-600">
-        By registering, you agree to our{' '}
-        <Link to="/privacy" className="text-indigo-400/70">Privacy Policy</Link>
+      <p className="mt-auto py-8 text-center text-xs text-gray-700">
+        By registering you agree to our{' '}
+        <Link to="/privacy" className="text-brand-400/50">Privacy Policy</Link>
       </p>
     </div>
   )

@@ -47,13 +47,13 @@ export default function Team() {
     <Layout title="My Team" showBack showActions={false}>
       <div className="px-4 pt-4 space-y-4">
         {/* Team rewards */}
-        <div className="card bg-gradient-to-br from-indigo-900/40 to-violet-900/40 border-indigo-500/20">
+        <div className="card bg-gradient-to-br from-brand-900/40 to-brand-900/40 border-brand-500/20">
           <p className="text-xs text-gray-400 mb-3">Your Team Reward Rate (LV.{userLevel})</p>
           <div className="grid grid-cols-3 gap-2">
             {['A-Level', 'B-Level', 'C-Level'].map((tier, i) => (
               <div key={tier} className="bg-white/5 rounded-xl py-3 text-center">
                 <p className="text-xs text-gray-400 mb-1">{tier}</p>
-                <p className="text-lg font-bold text-indigo-400">{levelConfig?.teamRewards[i] ?? 0}%</p>
+                <p className="text-lg font-bold text-brand-400">{levelConfig?.teamRewards[i] ?? 0}%</p>
               </div>
             ))}
           </div>
@@ -76,7 +76,7 @@ export default function Team() {
               key={tier}
               onClick={() => setActiveTab(tier)}
               className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === tier ? 'bg-indigo-600 text-white' : 'bg-surface-muted text-gray-400'
+                activeTab === tier ? 'bg-brand-500 text-white' : 'bg-surface-muted text-gray-400'
               }`}
             >
               {['A', 'B', 'C'][tier - 1]}-Level
@@ -95,7 +95,7 @@ export default function Team() {
           <div className="card p-0 overflow-hidden">
             {filtered.map((member) => (
               <div key={member.id} className="flex items-center gap-3 p-4 border-b border-surface-border last:border-0">
-                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
+                <div className="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold">
                   {member.username[0].toUpperCase()}
                 </div>
                 <div className="flex-1">

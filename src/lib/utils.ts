@@ -49,7 +49,7 @@ export const TASK_TYPES = [
     returnRange: '92% - 110%',
     price: 50,
     minLevel: 0,
-    color: 'from-blue-600 to-indigo-600',
+    color: 'from-brand-600 to-brand-500',
   },
   {
     type: 'tabular',
@@ -59,7 +59,7 @@ export const TASK_TYPES = [
     returnRange: '120% - 130%',
     price: 600,
     minLevel: 3,
-    color: 'from-violet-600 to-purple-600',
+    color: 'from-teal-600 to-brand-600',
   },
   {
     type: 'picture',
@@ -69,7 +69,7 @@ export const TASK_TYPES = [
     returnRange: '140%',
     price: 3000,
     minLevel: 5,
-    color: 'from-pink-600 to-rose-600',
+    color: 'from-emerald-600 to-teal-600',
   },
   {
     type: 'video',
@@ -79,6 +79,6 @@ export const TASK_TYPES = [
     returnRange: '150%',
     price: 6000,
     minLevel: 6,
-    color: 'from-amber-600 to-orange-600',
+    color: 'from-amber-500 to-orange-600',
   },
 ]

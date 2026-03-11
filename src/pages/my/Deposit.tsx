@@ -44,7 +44,7 @@ export default function Deposit() {
 
           <div className="bg-surface-muted rounded-xl px-4 py-3 flex items-center gap-2">
             <p className="flex-1 text-xs text-gray-300 font-mono truncate">{WALLET_ADDRESS}</p>
-            <button onClick={copyAddress} className="text-indigo-400 flex-shrink-0">
+            <button onClick={copyAddress} className="text-brand-400 flex-shrink-0">
               <Copy size={14} />
             </button>
           </div>
@@ -89,7 +89,7 @@ export default function Deposit() {
             'Funds arrive within 1-5 minutes',
           ].map((step, i) => (
             <div key={i} className="flex items-start gap-3 py-2">
-              <div className="w-5 h-5 rounded-full bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-xs text-indigo-400 font-bold flex-shrink-0">
+              <div className="w-5 h-5 rounded-full bg-brand-500/30 border border-brand-500/50 flex items-center justify-center text-xs text-brand-400 font-bold flex-shrink-0">
                 {i + 1}
               </div>
               <p className="text-gray-400 text-sm">{step}</p>

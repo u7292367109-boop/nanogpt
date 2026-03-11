@@ -9,34 +9,35 @@ interface TopBarProps {
 
 export default function TopBar({ title, showBack, showActions = true }: TopBarProps) {
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-surface-card border-b border-surface-border sticky top-0 z-40">
+    <header className="flex items-center justify-between px-4 bg-surface-card/95 backdrop-blur-md border-b border-surface-border sticky top-0 z-40"
+            style={{ paddingTop: 'env(safe-area-inset-top, 12px)', paddingBottom: '10px' }}>
       <div className="flex items-center gap-2">
         {showBack ? (
-          <Link to={-1 as never} className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors">
-            <ChevronLeft size={20} />
-            {title && <span className="font-semibold text-white">{title}</span>}
+          <Link to={-1 as never} className="flex items-center gap-1.5 text-white">
+            <ChevronLeft size={22} className="text-gray-400" />
+            {title && <span className="font-bold text-white text-base">{title}</span>}
           </Link>
         ) : (
           <Link to="/home" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">N</span>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-brand-sm">
+              <span className="text-white font-extrabold text-sm">N</span>
             </div>
-            <span className="font-bold text-white text-lg tracking-tight">NanoGPT</span>
+            <span className="font-extrabold text-white text-lg tracking-tight">NanoGPT</span>
           </Link>
         )}
       </div>
 
       {showActions && (
-        <div className="flex items-center gap-1">
-          <Link to="/lang" className="p-2 text-gray-400 hover:text-white transition-colors">
+        <div className="flex items-center gap-0.5">
+          <Link to="/lang" className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white active:bg-surface-muted transition-colors">
             <Globe size={18} />
           </Link>
-          <a href="#" className="p-2 text-gray-400 hover:text-white transition-colors">
+          <a href="#" className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white active:bg-surface-muted transition-colors">
             <Headphones size={18} />
           </a>
-          <Link to="/notifications" className="p-2 text-gray-400 hover:text-white transition-colors relative">
+          <Link to="/notifications" className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white active:bg-surface-muted transition-colors relative">
             <Bell size={18} />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-indigo-400 rounded-full" />
+            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-400 rounded-full shadow-brand-sm" />
           </Link>
         </div>
       )}

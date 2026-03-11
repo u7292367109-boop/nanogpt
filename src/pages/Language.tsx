@@ -37,7 +37,7 @@ export default function Language() {
                 <p className="text-white text-sm font-medium">{native}</p>
                 <p className="text-gray-500 text-xs">{name}</p>
               </div>
-              {selected === code && <Check size={16} className="text-indigo-400" />}
+              {selected === code && <Check size={16} className="text-brand-400" />}
             </button>
           ))}
         </div>

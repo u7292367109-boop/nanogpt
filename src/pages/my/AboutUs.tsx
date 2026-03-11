@@ -6,12 +6,12 @@ export default function AboutUs() {
     <Layout title="About Us" showBack showActions={false}>
       <div className="px-4 pt-4 space-y-4 pb-6">
         {/* Hero */}
-        <div className="card bg-gradient-to-br from-indigo-900/50 to-violet-900/50 border-indigo-500/20 text-center py-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-4">
+        <div className="card bg-gradient-to-br from-brand-900/50 to-brand-900/50 border-brand-500/20 text-center py-8">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center mx-auto mb-4">
             <Cpu size={28} className="text-white" />
           </div>
           <h2 className="text-white font-bold text-2xl mb-1">NanoGPT</h2>
-          <p className="text-indigo-300 text-sm">Decentralized Computing Power Revenue Platform</p>
+          <p className="text-brand-300 text-sm">Decentralized Computing Power Revenue Platform</p>
         </div>
 
         {/* Story */}
@@ -38,8 +38,8 @@ export default function AboutUs() {
               { icon: Shield, label: 'Privacy First', desc: 'Your data stays yours. We only use compute, not content' },
             ].map(({ icon: Icon, label, desc }) => (
               <div key={label} className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-                  <Icon size={16} className="text-indigo-400" />
+                <div className="w-9 h-9 rounded-xl bg-brand-500/20 flex items-center justify-center flex-shrink-0">
+                  <Icon size={16} className="text-brand-400" />
                 </div>
                 <div>
                   <p className="text-white font-medium text-sm">{label}</p>
@@ -56,11 +56,11 @@ export default function AboutUs() {
           <div className="space-y-2">
             <div className="flex items-center justify-between py-2">
               <span className="text-gray-400 text-sm">Email</span>
-              <span className="text-indigo-400 text-sm">support@nanogpt.ai</span>
+              <span className="text-brand-400 text-sm">support@nanogpt.ai</span>
             </div>
             <div className="flex items-center justify-between py-2 border-t border-surface-border">
               <span className="text-gray-400 text-sm">Telegram</span>
-              <span className="text-indigo-400 text-sm">@NanoGPT_Support</span>
+              <span className="text-brand-400 text-sm">@NanoGPT_Support</span>
             </div>
           </div>
         </div>

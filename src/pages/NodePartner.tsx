@@ -12,7 +12,7 @@ export default function NodePartner() {
       <div className="px-4 py-6 space-y-6 pb-10">
         {/* Hero */}
         <div className="text-center">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center mx-auto mb-4">
             <Globe2 size={36} className="text-white" />
           </div>
           <h2 className="text-white font-bold text-xl mb-2">Global Computing Power Building</h2>

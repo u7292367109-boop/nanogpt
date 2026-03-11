@@ -46,7 +46,7 @@ export default function Withdraw() {
     <Layout title="Withdraw" showBack showActions={false}>
       <div className="px-4 pt-4 space-y-4">
         {/* Balance */}
-        <div className="card bg-gradient-to-br from-indigo-900/40 to-violet-900/40 border-indigo-500/20">
+        <div className="card bg-gradient-to-br from-brand-900/40 to-brand-900/40 border-brand-500/20">
           <p className="text-xs text-gray-400 mb-1">Available Balance</p>
           <p className="text-3xl font-bold text-white">
             {formatUSDT(assets?.withdrawal_balance ?? 0)}
@@ -96,7 +96,7 @@ export default function Withdraw() {
                 <button
                   type="button"
                   onClick={() => setAmount(formatUSDT(assets?.withdrawal_balance ?? 0))}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-indigo-400 font-semibold"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 font-semibold"
                 >
                   MAX
                 </button>

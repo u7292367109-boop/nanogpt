@@ -48,7 +48,7 @@ export default function Notifications() {
             onClick={() => setActiveTab(key)}
             className={`flex-1 py-3 flex flex-col items-center gap-1 text-xs font-medium transition-all
               ${activeTab === key
-                ? 'text-indigo-400 border-b-2 border-indigo-500'
+                ? 'text-brand-400 border-b-2 border-brand-500'
                 : 'text-gray-500'
               }`}
           >
@@ -67,13 +67,13 @@ export default function Notifications() {
         ) : (
           <div className="space-y-3">
             {notifications.map((n) => (
-              <div key={n.id} className={`card ${!n.read ? 'border-indigo-500/30' : ''}`}>
+              <div key={n.id} className={`card ${!n.read ? 'border-brand-500/30' : ''}`}>
                 <div className="flex items-start justify-between mb-1">
                   <p className={`text-sm font-semibold ${!n.read ? 'text-white' : 'text-gray-300'}`}>{n.title}</p>
                   <span className="text-xs text-gray-600 flex-shrink-0 ml-2">{timeAgo(n.created_at)}</span>
                 </div>
                 {n.content && <p className="text-gray-400 text-xs leading-relaxed">{n.content}</p>}
-                {!n.read && <div className="w-2 h-2 rounded-full bg-indigo-500 absolute top-4 right-4" />}
+                {!n.read && <div className="w-2 h-2 rounded-full bg-brand-500 absolute top-4 right-4" />}
               </div>
             ))}
           </div>

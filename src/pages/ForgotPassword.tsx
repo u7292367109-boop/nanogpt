@@ -32,7 +32,7 @@ export default function ForgotPassword() {
 
       {sent ? (
         <div className="card text-center py-8">
-          <Mail size={40} className="text-indigo-400 mx-auto mb-3" />
+          <Mail size={40} className="text-brand-400 mx-auto mb-3" />
           <h3 className="text-white font-semibold mb-2">Check your email</h3>
           <p className="text-gray-400 text-sm">
             We've sent a password reset link to <span className="text-white">{email}</span>

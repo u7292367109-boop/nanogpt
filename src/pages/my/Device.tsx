@@ -36,7 +36,7 @@ export default function Device() {
     <Layout title="My Device" showBack showActions={false}>
       <div className="px-4 pt-4 space-y-4">
         <div className="flex flex-col items-center py-6">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-900 to-violet-900 flex items-center justify-center text-4xl mb-3 glow-pulse">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-green-950 to-emerald-900 flex items-center justify-center text-4xl mb-3 glow-pulse">
             📱
           </div>
           <p className="text-white font-bold text-lg">{device?.model ?? 'Loading...'}</p>
@@ -46,7 +46,7 @@ export default function Device() {
         <div className="card p-0 overflow-hidden">
           {fields.map(({ icon: Icon, label, value, mono }) => (
             <div key={label} className="flex items-start gap-3 p-4 border-b border-surface-border last:border-0">
-              <Icon size={16} className="text-indigo-400 mt-0.5 flex-shrink-0" />
+              <Icon size={16} className="text-brand-400 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-400 mb-0.5">{label}</p>
                 <p className={`text-white text-sm break-all ${mono ? 'font-mono' : 'font-medium'}`}>{value}</p>
@@ -55,10 +55,10 @@ export default function Device() {
           ))}
         </div>
 
-        <div className="card bg-indigo-500/10 border-indigo-500/20">
+        <div className="card bg-brand-500/10 border-brand-500/20">
           <div className="flex items-center gap-2 mb-2">
-            <Cpu size={14} className="text-indigo-400" />
-            <p className="text-indigo-300 text-xs font-semibold">Node Status</p>
+            <Cpu size={14} className="text-brand-400" />
+            <p className="text-brand-300 text-xs font-semibold">Node Status</p>
           </div>
           <p className="text-gray-300 text-xs leading-relaxed">
             Your device is registered as a General Computing Node in the NanoGPT network.

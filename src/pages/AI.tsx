@@ -63,7 +63,7 @@ export default function AI() {
           <ChevronLeft size={22} />
         </Link>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center">
             <Bot size={16} className="text-white" />
           </div>
           <div>
@@ -78,7 +78,7 @@ export default function AI() {
         {/* Welcome */}
         {messages.length === 0 && (
           <div className="text-center py-6">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center mx-auto mb-4">
               <Bot size={32} className="text-white" />
             </div>
             <h2 className="text-white font-bold text-xl mb-1">Welcome to NanoGPT AI</h2>
@@ -94,7 +94,7 @@ export default function AI() {
               <button
                 key={q}
                 onClick={() => sendMessage(q)}
-                className="w-full text-left px-4 py-3 rounded-xl border border-surface-border bg-surface-muted text-sm text-gray-300 hover:border-indigo-500/40 hover:text-white transition-all"
+                className="w-full text-left px-4 py-3 rounded-xl border border-surface-border bg-surface-muted text-sm text-gray-300 hover:border-brand-500/40 hover:text-white transition-all"
               >
                 "{q}"
               </button>
@@ -107,14 +107,14 @@ export default function AI() {
           <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
             <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
               msg.role === 'assistant'
-                ? 'bg-gradient-to-br from-indigo-500 to-violet-600'
+                ? 'bg-gradient-to-br from-brand-500 to-brand-600'
                 : 'bg-surface-muted'
             }`}>
               {msg.role === 'assistant' ? <Bot size={14} className="text-white" /> : <User size={14} className="text-gray-300" />}
             </div>
             <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-indigo-600 text-white rounded-tr-sm'
+                ? 'bg-brand-500 text-white rounded-tr-sm'
                 : 'bg-surface-card text-gray-200 rounded-tl-sm border border-surface-border'
             }`}>
               {msg.content}
@@ -125,11 +125,11 @@ export default function AI() {
         {/* Loading */}
         {loading && (
           <div className="flex gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex-shrink-0 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex-shrink-0 flex items-center justify-center">
               <Bot size={14} className="text-white" />
             </div>
             <div className="bg-surface-card border border-surface-border rounded-2xl rounded-tl-sm px-4 py-3">
-              <Loader2 size={16} className="text-indigo-400 animate-spin" />
+              <Loader2 size={16} className="text-brand-400 animate-spin" />
             </div>
           </div>
         )}
@@ -151,7 +151,7 @@ export default function AI() {
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || loading}
-            className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white disabled:opacity-40 transition-all"
+            className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white disabled:opacity-40 transition-all"
           >
             <Send size={16} />
           </button>

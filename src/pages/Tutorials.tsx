@@ -26,7 +26,7 @@ export default function Tutorials() {
 
       <div className="px-4 pt-4 pb-8">
         <div className="flex items-center gap-2 mb-4">
-          <BookOpen size={18} className="text-indigo-400" />
+          <BookOpen size={18} className="text-brand-400" />
           <p className="text-gray-400 text-sm">Learn how to use NanoGPT</p>
         </div>
 
@@ -35,7 +35,7 @@ export default function Tutorials() {
             <button key={i} className="menu-item w-full text-left">
               <div>
                 <p className="text-white text-sm font-medium">{t.title}</p>
-                <p className="text-xs text-indigo-400 mt-0.5">{t.category}</p>
+                <p className="text-xs text-brand-400 mt-0.5">{t.category}</p>
               </div>
               <ChevronRight size={16} className="text-gray-600 flex-shrink-0" />
             </button>

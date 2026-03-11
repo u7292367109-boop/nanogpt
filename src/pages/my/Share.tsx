@@ -65,17 +65,17 @@ export default function Share() {
         <div className="card">
           <p className="section-title">Your Referral Code</p>
           <div className="flex items-center gap-3 bg-surface-muted rounded-xl px-4 py-3 mb-3">
-            <p className="flex-1 text-indigo-300 font-mono font-semibold tracking-widest">
+            <p className="flex-1 text-brand-300 font-mono font-semibold tracking-widest">
               {profile?.referral_code ?? '—'}
             </p>
-            <button onClick={copyLink} className="text-indigo-400">
+            <button onClick={copyLink} className="text-brand-400">
               <Copy size={16} />
             </button>
           </div>
           <p className="text-xs text-gray-500 mb-4">Or share your full invite link:</p>
           <div className="flex items-center gap-2 bg-surface-muted rounded-xl px-3 py-2 mb-4">
             <p className="flex-1 text-xs text-gray-400 truncate">{referralLink}</p>
-            <button onClick={copyLink} className="text-indigo-400 flex-shrink-0">
+            <button onClick={copyLink} className="text-brand-400 flex-shrink-0">
               <Copy size={14} />
             </button>
           </div>
@@ -100,7 +100,7 @@ export default function Share() {
               { step: '3', title: 'You both earn', desc: 'Receive team rewards automatically' },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
                   {step}
                 </div>
                 <div>
