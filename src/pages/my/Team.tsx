@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Users, UserPlus } from 'lucide-react'
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
@@ -15,6 +16,7 @@ interface TeamMember {
 
 export default function Team() {
   const { user, profile } = useAuth()
+  const navigate = useNavigate()
   const [members, setMembers] = useState<TeamMember[]>([])
   const [activeTab, setActiveTab] = useState(1)
 
@@ -75,9 +77,7 @@ export default function Team() {
             <button
               key={tier}
               onClick={() => setActiveTab(tier)}
-              className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === tier ? 'bg-brand-500 text-white' : 'bg-surface-muted text-gray-400'
-              }`}
+              className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === tier ? 'bg-brand-500 text-white' : 'bg-surface-muted text-gray-400'}`}
             >
               {['A', 'B', 'C'][tier - 1]}-Level
             </button>
@@ -109,7 +109,7 @@ export default function Team() {
         )}
 
         {/* Invite CTA */}
-        <button className="btn-primary flex items-center justify-center gap-2">
+        <button onClick={() => navigate('/my/share')} className="btn-primary flex items-center justify-center gap-2">
           <UserPlus size={16} />
           Invite Friends
         </button>

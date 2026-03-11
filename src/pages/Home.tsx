@@ -87,14 +87,14 @@ export default function Home() {
             <div className="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-2xl shrink-0">📱</div>
             <div className="flex-1 min-w-0">
               <p className="text-white font-bold text-sm">Personal Node</p>
-              <p className="text-gray-500 text-xs mb-2">Daily: <span className="text-brand-400 font-semibold">+0.014 USDT</span></p>
+              <p className="text-gray-500 text-xs mb-2">Daily: <span className="text-brand-400 font-semibold">+{formatUSDT(assets?.daily_yield ?? 0)} USDT</span></p>
               <div className="progress-bar">
-                <div className="progress-fill" style={{ width: '38%' }} />
+                <div className="progress-fill" style={{ width: (() => { const d = new Date(); return Math.round((d.getHours()*60+d.getMinutes())/(24*60)*100) + '%' })() }} />
               </div>
             </div>
-            <button className="px-3 py-1.5 rounded-xl bg-brand-500/20 text-brand-400 text-xs font-bold border border-brand-500/25 shrink-0">
+            <a href="/power" className="px-3 py-1.5 rounded-xl bg-brand-500/20 text-brand-400 text-xs font-bold border border-brand-500/25 shrink-0 active:opacity-70">
               Claim
-            </button>
+            </a>
           </div>
         </div>
 

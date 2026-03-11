@@ -24,7 +24,7 @@ export default function Profile() {
     { icon: ShoppingBag, label: 'My Orders',        to: '/my/orders',    color: 'text-brand-400',  bg: 'bg-brand-500/20' },
     { icon: Share2,      label: 'Share & Invite',   to: '/my/share',     color: 'text-pink-400',   bg: 'bg-pink-500/20' },
     { icon: Shield,      label: 'KYC Verification', to: '/my/kyc',       color: 'text-amber-400',  bg: 'bg-amber-500/20' },
-    { icon: Headphones,  label: 'Customer Service', to: '#',             color: 'text-brand-300',  bg: 'bg-brand-500/10' },
+    { icon: Headphones,  label: 'Customer Service', to: 'https://t.me/nanogptsupport',             color: 'text-brand-300',  bg: 'bg-brand-500/10' },
     { icon: Layers,      label: 'Task Center',      to: '/task',         color: 'text-brand-400',  bg: 'bg-brand-500/20' },
     { icon: Globe,       label: 'Language',         to: '/lang',         color: 'text-teal-400',   bg: 'bg-teal-500/20' },
     { icon: Info,        label: 'About Us',         to: '/my/about-us',  color: 'text-gray-400',   bg: 'bg-gray-500/20' },
