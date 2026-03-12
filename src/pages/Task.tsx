@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Lock, CheckCircle, Loader2, ChevronRight, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Lock, CheckCircle, Loader2, ChevronRight, AlertCircle, Timer } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
@@ -8,29 +8,130 @@ import { supabase } from '../lib/supabase'
 
 const TABS = ['LV.0', 'LV.1', 'LV.2', 'LV.3', 'LV.4', 'LV.5', 'LV.6']
 
-const RETURN_MAP: Record<string, number> = {
-  text:    1.01,
-  tabular: 1.25,
-  picture: 1.40,
-  video:   1.50,
+// Return rate as percentage stored in DB (e.g. 101 = 101% = get back 101% of investment)
+const RETURN_RATE: Record<string, number> = {
+  text:    101,
+  tabular: 125,
+  picture: 140,
+  video:   150,
+}
+
+// Seconds each task takes to process
+const TASK_DURATION: Record<string, number> = {
+  text:    8,
+  tabular: 12,
+  picture: 15,
+  video:   20,
+}
+
+const DAILY_TASK_LIMIT = 10
+
+function getTodayKey(userId: string) {
+  const d = new Date()
+  return `tasks_${userId}_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`
+}
+
+function getDailyCount(userId: string): number {
+  return parseInt(localStorage.getItem(getTodayKey(userId)) ?? '0', 10)
+}
+
+function incrementDailyCount(userId: string) {
+  const key = getTodayKey(userId)
+  const val = parseInt(localStorage.getItem(key) ?? '0', 10)
+  localStorage.setItem(key, (val + 1).toString())
+}
+
+interface ActiveTask {
+  orderId: string
+  taskType: string
+  label: string
+  investment: number
+  returnRate: number
+  totalReturn: number
+  duration: number
+  startedAt: number
 }
 
 export default function Task() {
   const { profile, assets, user, refreshAssets } = useAuth()
-  const [activeTab, setActiveTab]     = useState(0)
+  const [activeTab, setActiveTab] = useState(0)
   const [openingTask, setOpeningTask] = useState<string | null>(null)
-  const [message, setMessage]         = useState({ text: '', ok: true })
+  const [message, setMessage] = useState({ text: '', ok: true })
+  const [activeTask, setActiveTask] = useState<ActiveTask | null>(null)
+  const [taskProgress, setTaskProgress] = useState(0)
+  const [taskRemaining, setTaskRemaining] = useState(0)
+  const [dailyCount, setDailyCount] = useState(0)
+  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const userLevel    = profile?.level ?? 0
+  const userLevel = profile?.level ?? 0
   const currentLevel = LEVEL_CONFIG[activeTab]
+  const dailyRemaining = DAILY_TASK_LIMIT - dailyCount
+
+  useEffect(() => {
+    if (user) setDailyCount(getDailyCount(user.id))
+  }, [user])
 
   function showMsg(text: string, ok = true) {
     setMessage({ text, ok })
-    setTimeout(() => setMessage({ text: '', ok: true }), 3500)
+    setTimeout(() => setMessage({ text: '', ok: true }), 4500)
+  }
+
+  // Task countdown & auto-complete
+  useEffect(() => {
+    if (!activeTask) return
+
+    progressRef.current = setInterval(async () => {
+      const elapsed = (Date.now() - activeTask.startedAt) / 1000
+      const pct = Math.min(100, (elapsed / activeTask.duration) * 100)
+      const rem = Math.max(0, Math.ceil(activeTask.duration - elapsed))
+      setTaskProgress(pct)
+      setTaskRemaining(rem)
+
+      if (elapsed >= activeTask.duration) {
+        clearInterval(progressRef.current!)
+        await finishTask(activeTask)
+      }
+    }, 200)
+
+    return () => { if (progressRef.current) clearInterval(progressRef.current) }
+  }, [activeTask])
+
+  async function finishTask(task: ActiveTask) {
+    if (!user) return
+
+    // Fetch fresh assets to avoid stale values
+    const { data: fresh } = await supabase.from('assets').select('*').eq('user_id', user.id).single()
+    if (!fresh) return
+
+    const profit = parseFloat((task.totalReturn - task.investment).toFixed(2))
+
+    await supabase.from('assets').update({
+      task_balance:       Math.max(0, (fresh.task_balance ?? 0) - task.investment),
+      withdrawal_balance: parseFloat(((fresh.withdrawal_balance ?? 0) + task.totalReturn).toFixed(2)),
+    }).eq('user_id', user.id)
+
+    await supabase.from('orders').update({
+      status:       'completed',
+      completed_at: new Date().toISOString(),
+    }).eq('id', task.orderId)
+
+    await supabase.from('transactions').insert({
+      user_id: user.id,
+      type:    'task_profit',
+      amount:  profit,
+      status:  'approved',
+      note:    `${task.label} task profit`,
+    })
+
+    await refreshAssets()
+    setActiveTask(null)
+    setTaskProgress(0)
+    showMsg(`✅ ${task.label} task completed! +${profit.toFixed(2)} USDT profit credited`)
   }
 
   async function handleOpenTask(task: typeof TASK_TYPES[0]) {
     if (!user) return
+    if (activeTask) { showMsg('A task is already processing. Please wait.', false); return }
 
     if (userLevel < task.minLevel) {
       showMsg(`Requires LV.${task.minLevel} or higher`, false)
@@ -43,39 +144,72 @@ export default function Task() {
       return
     }
 
+    if (dailyRemaining <= 0) {
+      showMsg(`Daily limit reached (${DAILY_TASK_LIMIT}/day). Resets at midnight UTC.`, false)
+      return
+    }
+
     setOpeningTask(task.type)
 
-    const expectedReturn = parseFloat((task.price * RETURN_MAP[task.type]).toFixed(2))
+    const returnRate  = RETURN_RATE[task.type]
+    const totalReturn = parseFloat((task.price * returnRate / 100).toFixed(2))
 
-    const { error: orderErr } = await supabase.from('orders').insert({
-      user_id: user.id,
-      task_type: task.type,
-      amount: task.price,
-      expected_return: expectedReturn,
-      status: 'pending',
-    })
+    // Create order with correct column names
+    const { data: orderData, error: orderErr } = await supabase
+      .from('orders')
+      .insert({
+        user_id:           user.id,
+        task_type:         task.type,
+        investment_amount: task.price,
+        return_rate:       returnRate,
+        status:            'active',
+        started_at:        new Date().toISOString(),
+      })
+      .select('id')
+      .single()
 
-    if (orderErr) {
+    if (orderErr || !orderData) {
       setOpeningTask(null)
       showMsg('Failed to create order. Please try again.', false)
       return
     }
 
+    // Deduct vault, add to task_balance
     await supabase.from('assets').update({
-      vault_balance: vaultBal - task.price,
-      task_balance:  (assets?.task_balance ?? 0) + task.price,
+      vault_balance: parseFloat((vaultBal - task.price).toFixed(2)),
+      task_balance:  parseFloat(((assets?.task_balance ?? 0) + task.price).toFixed(2)),
     }).eq('user_id', user.id)
+
+    incrementDailyCount(user.id)
+    const newCount = getDailyCount(user.id)
+    setDailyCount(newCount)
 
     await refreshAssets()
     setOpeningTask(null)
-    showMsg(`✓ ${task.label} task started! +${(task.price * (RETURN_MAP[task.type] - 1)).toFixed(2)} USDT expected return`)
+
+    // Start processing animation
+    const at: ActiveTask = {
+      orderId:   orderData.id,
+      taskType:  task.type,
+      label:     task.label,
+      investment: task.price,
+      returnRate,
+      totalReturn,
+      duration:  TASK_DURATION[task.type],
+      startedAt: Date.now(),
+    }
+    setActiveTask(at)
+    setTaskProgress(0)
+    setTaskRemaining(TASK_DURATION[task.type])
+
+    showMsg(`🤖 ${task.label} task started — AI processing…`)
   }
 
   return (
     <Layout title="Task Center" showBack={false}>
       <div className="px-4 pt-4 pb-6 space-y-4">
 
-        {/* Vault balance pill */}
+        {/* Balance + daily counter */}
         <div className="flex items-center justify-between bg-surface-card rounded-2xl px-4 py-3 border border-surface-border">
           <div>
             <p className="text-xs text-gray-500">Vault Balance</p>
@@ -84,10 +218,47 @@ export default function Task() {
               <span className="text-xs text-gray-500 font-normal ml-1">USDT</span>
             </p>
           </div>
-          <Link to="/my/deposit" className="px-3 py-1.5 bg-brand-500/20 border border-brand-500/40 text-brand-400 text-xs font-bold rounded-xl active:opacity-70">
+          <div className="text-center">
+            <p className="text-xs text-gray-500">Tasks Today</p>
+            <p className={`font-extrabold text-sm ${dailyRemaining > 0 ? 'text-brand-400' : 'text-red-400'}`}>
+              {dailyCount}/{DAILY_TASK_LIMIT}
+            </p>
+          </div>
+          <Link
+            to="/my/deposit"
+            className="px-3 py-1.5 bg-brand-500/20 border border-brand-500/40 text-brand-400 text-xs font-bold rounded-xl active:opacity-70"
+          >
             + Deposit
           </Link>
         </div>
+
+        {/* Active task processing card */}
+        {activeTask && (
+          <div className="card border-brand-500/40 bg-gradient-to-br from-brand-500/5 to-surface-card fade-in">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+                <p className="text-white font-bold text-sm">{activeTask.label} Task Processing</p>
+              </div>
+              <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold">
+                <Timer size={12} />
+                <span>{taskRemaining}s remaining</span>
+              </div>
+            </div>
+            <div className="progress-bar mb-2">
+              <div
+                className="progress-fill transition-all duration-200"
+                style={{ width: `${taskProgress}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">AI model training in progress…</span>
+              <span className="text-brand-400 font-bold">
+                +{(activeTask.totalReturn - activeTask.investment).toFixed(2)} USDT profit
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Level tabs */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
@@ -106,7 +277,7 @@ export default function Task() {
           ))}
         </div>
 
-        {/* Level info */}
+        {/* Level info card */}
         <div className="card">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -158,13 +329,15 @@ export default function Task() {
           <p className="section-title">Available Tasks</p>
           <div className="space-y-3">
             {TASK_TYPES.map((task) => {
-              const locked    = userLevel < task.minLevel
-              const noFunds   = !locked && (assets?.vault_balance ?? 0) < task.price
-              const profit    = (task.price * (RETURN_MAP[task.type] - 1)).toFixed(2)
-              const returnAmt = (task.price * RETURN_MAP[task.type]).toFixed(2)
+              const locked      = userLevel < task.minLevel
+              const noFunds     = !locked && (assets?.vault_balance ?? 0) < task.price
+              const isActive    = activeTask?.taskType === task.type
+              const profit      = (task.price * (RETURN_RATE[task.type] / 100 - 1)).toFixed(2)
+              const totalReturn = (task.price * RETURN_RATE[task.type] / 100).toFixed(2)
+              const btnDisabled = !!openingTask || !!activeTask || locked || dailyRemaining <= 0
 
               return (
-                <div key={task.type} className={`card transition-all ${locked ? 'opacity-50' : ''}`}>
+                <div key={task.type} className={`card transition-all ${locked ? 'opacity-50' : ''} ${isActive ? 'border-brand-500/40' : ''}`}>
                   <div className="flex items-start gap-3 mb-4">
                     <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${task.color} flex items-center justify-center text-2xl shrink-0`}>
                       {task.emoji}
@@ -172,7 +345,11 @@ export default function Task() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <p className="text-white font-bold">{task.label} Task</p>
-                        {locked && <Lock size={14} className="text-gray-600" />}
+                        {locked
+                          ? <Lock size={14} className="text-gray-600" />
+                          : isActive
+                            ? <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+                            : null}
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5">{task.levelRange}</p>
                     </div>
@@ -186,7 +363,7 @@ export default function Task() {
                     </div>
                     <div className="bg-surface-muted rounded-xl p-2.5 text-center border border-surface-border">
                       <p className="text-[10px] text-gray-500 mb-0.5">Return</p>
-                      <p className="text-amber-400 font-extrabold text-sm">{task.returnRange}</p>
+                      <p className="text-amber-400 font-extrabold text-sm">{RETURN_RATE[task.type]}%</p>
                     </div>
                     <div className="bg-brand-500/10 rounded-xl p-2.5 text-center border border-brand-500/20">
                       <p className="text-[10px] text-gray-500 mb-0.5">Profit</p>
@@ -197,14 +374,14 @@ export default function Task() {
 
                   <div className="flex items-center justify-between mb-3 px-1">
                     <span className="text-xs text-gray-500">Total you receive</span>
-                    <span className="text-white font-bold">{returnAmt} USDT</span>
+                    <span className="text-white font-bold">{totalReturn} USDT</span>
                   </div>
 
-                  {noFunds && (
+                  {noFunds && !isActive && (
                     <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl">
                       <AlertCircle size={13} className="text-red-400 shrink-0" />
                       <p className="text-red-400 text-xs">
-                        Insufficient balance —{' '}
+                        Insufficient vault balance —{' '}
                         <Link to="/my/deposit" className="font-bold underline">Deposit USDT</Link>
                       </p>
                     </div>
@@ -212,17 +389,27 @@ export default function Task() {
 
                   <button
                     onClick={() => handleOpenTask(task)}
-                    disabled={!!openingTask || locked}
+                    disabled={btnDisabled}
                     className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
-                      locked
+                      locked || dailyRemaining <= 0
                         ? 'bg-surface-muted text-gray-600 cursor-not-allowed border border-surface-border'
-                        : `bg-gradient-to-r ${task.color} text-white shadow-brand-sm`
+                        : isActive
+                          ? 'bg-brand-500/20 text-brand-400 border border-brand-500/40 cursor-not-allowed'
+                          : activeTask
+                            ? 'bg-surface-muted text-gray-500 border border-surface-border cursor-not-allowed'
+                            : `bg-gradient-to-r ${task.color} text-white shadow-brand-sm`
                     }`}
                   >
                     {openingTask === task.type ? (
                       <><Loader2 size={15} className="animate-spin" /> Opening…</>
+                    ) : isActive ? (
+                      <><Loader2 size={15} className="animate-spin" /> Processing ({taskRemaining}s)…</>
                     ) : locked ? (
                       <><Lock size={13} /> Requires LV.{task.minLevel}</>
+                    ) : dailyRemaining <= 0 ? (
+                      <>Daily limit reached — resets midnight</>
+                    ) : activeTask ? (
+                      <>Wait for current task to finish</>
                     ) : (
                       <>Open Task — {task.price} USDT <ChevronRight size={14} /></>
                     )}
