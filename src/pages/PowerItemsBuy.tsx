@@ -50,7 +50,7 @@ export default function PowerItemsBuy() {
       return
     }
 
-    const { data: fresh } = await supabase.from('assets').select('*').eq('user_id', user.id).single()
+    const { data: fresh } = await supabase.from('assets').select('*').eq('user_id', user.id).maybeSingle()
     if (!fresh) {
       setError('Failed to fetch balance. Please try again.')
       setLoading(false)

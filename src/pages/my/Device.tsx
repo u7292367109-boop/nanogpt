@@ -13,28 +13,28 @@ interface DeviceInfo {
 }
 
 function detectUA() {
-  var ua = navigator.userAgent;
-  var model = "Computing Node", os = "Unknown OS", br = "Browser";
-  if (ua.indexOf("iPhone") > -1) {
-    model = "iPhone";
-    var m = ua.match(/iPhone OS ([d_]+)/); os = m ? "iOS " + m[1].replace(/_/g, ".") : "iOS";
-  } else if (ua.indexOf("Android") > -1) {
-    var mm = ua.match(/Android [d.]+; ([^;)]+)/); model = mm ? mm[1].trim() : "Android Device";
-    var vm = ua.match(/Android ([d.]+)/); os = vm ? "Android " + vm[1] : "Android";
-  } else if (ua.indexOf("Windows") > -1) {
-    model = "Windows PC"; os = "Windows 10/11";
-  } else if (ua.indexOf("Macintosh") > -1) {
-    model = "MacBook";
-    var mc = ua.match(/Mac OS X ([d_]+)/); os = mc ? "macOS " + mc[1].replace(/_/g, ".") : "macOS";
-  } else if (ua.indexOf("Linux") > -1) {
-    model = "Linux PC"; os = "Linux";
+  const ua = navigator.userAgent
+  let model = 'Computing Node', os = 'Unknown OS', br = 'Browser'
+  if (ua.indexOf('iPhone') > -1) {
+    model = 'iPhone'
+    const m = ua.match(/iPhone OS ([\d_]+)/); os = m ? 'iOS ' + m[1].replace(/_/g, '.') : 'iOS'
+  } else if (ua.indexOf('Android') > -1) {
+    const mm = ua.match(/Android [\d.]+; ([^;)]+)/); model = mm ? mm[1].trim() : 'Android Device'
+    const vm = ua.match(/Android ([\d.]+)/); os = vm ? 'Android ' + vm[1] : 'Android'
+  } else if (ua.indexOf('Windows') > -1) {
+    model = 'Windows PC'; os = 'Windows 10/11'
+  } else if (ua.indexOf('Macintosh') > -1) {
+    model = 'MacBook'
+    const mc = ua.match(/Mac OS X ([\d_]+)/); os = mc ? 'macOS ' + mc[1].replace(/_/g, '.') : 'macOS'
+  } else if (ua.indexOf('Linux') > -1) {
+    model = 'Linux PC'; os = 'Linux'
   }
-  if (ua.includes("Edg/")) br = "Edge";
-  else if (ua.includes("OPR/") || ua.includes("Opera")) br = "Opera";
-  else if (ua.includes("Chrome/") && !ua.includes("Chromium")) br = "Chrome";
-  else if (ua.includes("Firefox/")) br = "Firefox";
-  else if (ua.includes("Safari/") && !ua.includes("Chrome")) br = "Safari";
-  return { model: model, platform: br + " · NanoGPT Node", os: os };
+  if (ua.includes('Edg/')) br = 'Edge'
+  else if (ua.includes('OPR/') || ua.includes('Opera')) br = 'Opera'
+  else if (ua.includes('Chrome/') && !ua.includes('Chromium')) br = 'Chrome'
+  else if (ua.includes('Firefox/')) br = 'Firefox'
+  else if (ua.includes('Safari/') && !ua.includes('Chrome')) br = 'Safari'
+  return { model, platform: br + ' · NanoGPT Node', os }
 }
 
 export default function Device() {
@@ -45,7 +45,7 @@ export default function Device() {
   useEffect(() => {
     if (!user) return
     var det = detectUA()
-    supabase.from('devices').select('*').eq('user_id', user.id).single().then(async function({ data }) {
+    supabase.from('devices').select('*').eq('user_id', user.id).maybeSingle().then(async function({ data }) {
       if (data) {
         var needs = (data.model==='iPhone'&&det.model!=='iPhone')||data.os==='NanoGPT OS'||data.os==='Unknown OS'
         if (needs) { await supabase.from('devices').update({ model: det.model, platform: det.platform, os: det.os }).eq('user_id', user.id); setDevice(Object.assign({}, data, det)) }

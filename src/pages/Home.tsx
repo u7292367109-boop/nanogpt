@@ -27,7 +27,7 @@ export default function Home() {
 
   useEffect(() => {
     supabase.from('notifications').select('title').eq('type', 'announcement')
-      .order('created_at', { ascending: false }).limit(1).single()
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
       .then(({ data }) => { if (data?.title) setAnnouncement(data.title) })
   }, [])
 

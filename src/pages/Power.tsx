@@ -56,7 +56,7 @@ export default function Power() {
 
   useEffect(() => {
     if (!user) return
-    supabase.from('devices').select('*').eq('user_id', user.id).single()
+    supabase.from('devices').select('*').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => { if (data) setDevice(data) })
     supabase.from('orders').select('*').eq('user_id', user.id).eq('status', 'active').order('started_at', { ascending: false })
       .then(({ data }) => { if (data) setOrders(data) })
@@ -83,8 +83,16 @@ export default function Power() {
     setClaimError(''); setSuccess('')
     setTraining(true)
     const earned = parseFloat(dailyYield.toFixed(3))
-    const { data: fresh, error: fetchErr } = await supabase.from('assets').select('*').eq('user_id', user.id).single()
-    if (fetchErr || !fresh) { setClaimError('Unable to load balance. Please refresh.'); setTraining(false); return }
+    let { data: fresh } = await supabase.from('assets').select('*').eq('user_id', user.id).maybeSingle()
+    if (!fresh) {
+      // Auto-create assets row if missing
+      const { data: created } = await supabase.from('assets').insert({
+        user_id: user.id, task_balance: 0, vault_balance: 0,
+        withdrawal_balance: 0, daily_yield: 0, total_yield: 0,
+      }).select().single()
+      fresh = created
+    }
+    if (!fresh) { setClaimError('Unable to load balance. Please refresh.'); setTraining(false); return }
     const { error: updateErr } = await supabase.from('assets').update({
       daily_yield:        earned,
       total_yield:        parseFloat(((fresh.total_yield ?? 0) + earned).toFixed(3)),

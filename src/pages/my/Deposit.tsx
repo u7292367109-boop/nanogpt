@@ -226,7 +226,7 @@ export default function Deposit() {
       status: 'pending',
     })
     // Credit vault_balance immediately so user can start tasks
-    var fr = await supabase.from('assets').select('vault_balance').eq('user_id', user.id).single()
+    var fr = await supabase.from('assets').select('vault_balance').eq('user_id', user.id).maybeSingle()
     if (fr.data) await supabase.from('assets').update({ vault_balance: parseFloat(((fr.data.vault_balance||0)+amt).toFixed(3)) }).eq('user_id', user.id)
     await refreshAssets()
     setSubmitting(false)
