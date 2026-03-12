@@ -20,6 +20,7 @@ import Notifications from './pages/Notifications'
 import NodePartner from './pages/NodePartner'
 import Tutorials from './pages/Tutorials'
 import Language from './pages/Language'
+import Accelerate from './pages/Accelerate'
 
 // My pages
 import Device from './pages/my/Device'
@@ -54,6 +55,7 @@ function App() {
           <Route path="/node-partner" element={<ProtectedRoute><NodePartner /></ProtectedRoute>} />
           <Route path="/tutorials" element={<ProtectedRoute><Tutorials /></ProtectedRoute>} />
           <Route path="/lang" element={<ProtectedRoute><Language /></ProtectedRoute>} />
+          <Route path="/accelerate" element={<ProtectedRoute><Accelerate /></ProtectedRoute>} />
 
           {/* My pages */}
           <Route path="/my/device" element={<ProtectedRoute><Device /></ProtectedRoute>} />

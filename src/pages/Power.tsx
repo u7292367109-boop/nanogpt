@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Play, Zap, TrendingUp, ChevronRight, Loader2, Cpu, CheckCircle } from 'lucide-react'
+import { Play, Zap, TrendingUp, ChevronRight, Loader2, Cpu, CheckCircle, Rocket } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { formatUSDT } from '../lib/utils'
@@ -11,6 +11,13 @@ interface Device {
   model: string
   platform: string
   os: string
+}
+
+interface AcceleratorOrder {
+  id: string
+  return_rate: number
+  started_at: string | null
+  created_at: string
 }
 
 const YIELD_BY_LEVEL = [0.014, 0.025, 0.045, 0.08, 0.15, 0.30, 0.60]
@@ -41,29 +48,61 @@ function formatCountdown(secs: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+function getDaysRemaining(dateStr: string): number {
+  const daysElapsed = (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24)
+  return Math.max(0, Math.floor(60 - daysElapsed))
+}
+
 export default function Power() {
   const { user, profile, assets, refreshAssets } = useAuth()
   const [device, setDevice]          = useState<Device | null>(null)
+  const [activeAcc, setActiveAcc]    = useState<AcceleratorOrder | null>(null)
   const [training, setTraining]      = useState(false)
   const [success, setSuccess]        = useState('')
   const [alreadyClaimed, setClaimed] = useState(false)
   const [countdown, setCountdown]    = useState(0)
 
-  const userLevel  = profile?.level ?? 0
-  const dailyYield = YIELD_BY_LEVEL[Math.min(userLevel, YIELD_BY_LEVEL.length - 1)]
-  const now        = new Date()
-  const dayPct     = (now.getHours() * 60 + now.getMinutes()) / (24 * 60)
-  const progress   = Math.round(dayPct * 100)
+  const userLevel      = profile?.level ?? 0
+  const baseDailyYield = YIELD_BY_LEVEL[Math.min(userLevel, YIELD_BY_LEVEL.length - 1)]
+  const dailyYield     = activeAcc ? activeAcc.return_rate : baseDailyYield
+
+  const now      = new Date()
+  const dayPct   = (now.getHours() * 60 + now.getMinutes()) / (24 * 60)
+  const progress = Math.round(dayPct * 100)
 
   useEffect(() => {
-    if (user) {
-      supabase.from('devices').select('*').eq('user_id', user.id).single()
-        .then(({ data }) => { if (data) setDevice(data) })
-      const claimed = hasClaimedToday(user.id)
-      setClaimed(claimed)
-      if (claimed) setCountdown(secondsUntilMidnightUTC())
-    }
+    if (!user) return
+    supabase.from('devices').select('*').eq('user_id', user.id).single()
+      .then(({ data }) => { if (data) setDevice(data) })
+    const claimed = hasClaimedToday(user.id)
+    setClaimed(claimed)
+    if (claimed) setCountdown(secondsUntilMidnightUTC())
+    loadActiveAccelerator()
   }, [user])
+
+  async function loadActiveAccelerator() {
+    if (!user) return
+    const { data } = await supabase
+      .from('orders')
+      .select('id, return_rate, started_at, created_at')
+      .eq('user_id', user.id)
+      .eq('task_type', 'accelerator')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (data) {
+      const refDate = data.started_at ?? data.created_at
+      const daysElapsed = (Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60 * 24)
+      if (daysElapsed >= 60) {
+        await supabase.from('orders').update({ status: 'expired' }).eq('id', data.id)
+        setActiveAcc(null)
+      } else {
+        setActiveAcc(data)
+      }
+    }
+  }
 
   // Countdown tick
   useEffect(() => {
@@ -96,7 +135,9 @@ export default function Power() {
       type:    'yield',
       amount:  earned,
       status:  'approved',
-      note:    `Daily node yield LV.${userLevel}`,
+      note:    activeAcc
+        ? `Daily accelerator yield (+$${earned.toFixed(2)})`
+        : `Daily node yield LV.${userLevel}`,
     })
 
     await refreshAssets()
@@ -118,8 +159,8 @@ export default function Power() {
           <div className="flex gap-3">
             <div className="flex-1 bg-surface-muted rounded-2xl p-4 text-center border border-surface-border">
               <p className="text-xs text-gray-500 mb-1">Daily Yield</p>
-              <p className="font-extrabold text-brand-400 text-xl">{formatUSDT(assets?.daily_yield ?? 0)}</p>
-              <p className="text-xs text-gray-600 mt-0.5">USDT</p>
+              <p className="font-extrabold text-brand-400 text-xl">+{dailyYield.toFixed(3)}</p>
+              <p className="text-xs text-gray-600 mt-0.5">USDT/day</p>
             </div>
             <div className="flex-1 bg-surface-muted rounded-2xl p-4 text-center border border-surface-border">
               <p className="text-xs text-gray-500 mb-1">Total Yield</p>
@@ -128,6 +169,24 @@ export default function Power() {
             </div>
           </div>
         </div>
+
+        {/* Active Accelerator Banner */}
+        {activeAcc && (
+          <div className="card border-brand-500/30 bg-brand-500/5 fade-in">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <Rocket size={15} className="text-brand-400" />
+                <p className="text-sm font-bold text-brand-400">Active Accelerator</p>
+              </div>
+              <span className="text-xs text-gray-500">
+                {getDaysRemaining(activeAcc.started_at ?? activeAcc.created_at)} days left
+              </span>
+            </div>
+            <p className="text-xs text-gray-400">
+              Earning <span className="text-brand-400 font-bold">+${activeAcc.return_rate.toFixed(2)} USDT/day</span> via accelerator boost
+            </p>
+          </div>
+        )}
 
         {/* Node card */}
         <div className="card">
@@ -192,6 +251,20 @@ export default function Power() {
             </div>
           )}
         </div>
+
+        {/* Accelerator CTA */}
+        <Link to="/accelerate" className="card flex items-center justify-between active:opacity-70 transition-opacity">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+              <Rocket size={18} className="text-brand-400" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">Yield Accelerators</p>
+              <p className="text-gray-500 text-xs">Boost daily earnings up to $250/day</p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-gray-600" />
+        </Link>
 
         {/* Node info */}
         {device && (

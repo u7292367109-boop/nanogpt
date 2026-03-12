@@ -31,18 +31,20 @@ const STATUS_META: Record<string, { icon: typeof Clock; color: string; label: st
 }
 
 const TYPE_EMOJI: Record<string, string> = {
-  text:    '📝',
-  tabular: '📊',
-  picture: '🖼️',
-  video:   '🎥',
+  text:        '📝',
+  tabular:     '📊',
+  picture:     '🖼️',
+  video:       '🎥',
+  accelerator: '🚀',
 }
 
 const TX_TYPE_LABEL: Record<string, string> = {
-  deposit:     '↓ Deposit',
-  withdrawal:  '↑ Withdrawal',
-  yield:       '⚡ Daily Yield',
-  task_profit: '✅ Task Profit',
-  team_reward: '👥 Team Reward',
+  deposit:      '↓ Deposit',
+  withdrawal:   '↑ Withdrawal',
+  yield:        '⚡ Daily Yield',
+  task_profit:  '✅ Task Profit',
+  team_reward:  '👥 Team Reward',
+  accelerator:  '🚀 Accelerator Purchase',
 }
 
 export default function Orders() {
@@ -96,7 +98,9 @@ export default function Orders() {
             <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : tab === 'orders' ? (
-          orders.length === 0 ? (
+          // Filter out accelerator orders — they're not tasks
+          (() => { const taskOrders = orders.filter(o => o.task_type !== 'accelerator'); return (
+          taskOrders.length === 0 ? (
             <div className="card text-center py-14 mt-2">
               <ShoppingBag size={40} className="text-gray-600 mx-auto mb-3" />
               <p className="text-gray-400 font-medium">No task orders yet</p>
@@ -104,7 +108,7 @@ export default function Orders() {
             </div>
           ) : (
             <div className="space-y-3 mt-2">
-              {orders.map((order) => {
+              {taskOrders.map((order) => {
                 const meta    = STATUS_META[order.status] ?? STATUS_META.pending
                 const Icon    = meta.icon
                 const profit  = parseFloat(((order.investment_amount * order.return_rate / 100) - order.investment_amount).toFixed(2))
@@ -160,6 +164,7 @@ export default function Orders() {
               })}
             </div>
           )
+          )})()
         ) : (
           transactions.length === 0 ? (
             <div className="card text-center py-14 mt-2">
@@ -176,7 +181,7 @@ export default function Orders() {
                     className={`flex items-center gap-3 px-4 py-3.5 ${i < transactions.length - 1 ? 'border-b border-surface-border' : ''}`}
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm ${positive ? 'bg-brand-500/10' : 'bg-red-500/10'}`}>
-                      {tx.type === 'deposit' ? '↓' : tx.type === 'withdrawal' ? '↑' : tx.type === 'yield' ? '⚡' : tx.type === 'task_profit' ? '✅' : '👥'}
+                      {tx.type === 'deposit' ? '↓' : tx.type === 'withdrawal' ? '↑' : tx.type === 'yield' ? '⚡' : tx.type === 'task_profit' ? '✅' : tx.type === 'accelerator' ? '🚀' : '👥'}
                     </div>
                     <div className="flex-1">
                       <p className="text-white text-sm font-semibold">{TX_TYPE_LABEL[tx.type] ?? tx.type}</p>
