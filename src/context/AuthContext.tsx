@@ -28,6 +28,39 @@ function detectDeviceInfo() {
   return { model: model, platform: br + " · NanoGPT Node", os: os };
 }
 
+
+interface Profile {
+  id: string
+  username: string
+  uid: string
+  referral_code: string
+  referred_by: string | null
+  level: number
+  language: string
+}
+
+interface Assets {
+  user_id: string
+  task_balance: number
+  vault_balance: number
+  withdrawal_balance: number
+  daily_yield: number
+  total_yield: number
+}
+
+interface AuthContextType {
+  user: import('@supabase/supabase-js').User | null
+  session: import('@supabase/supabase-js').Session | null
+  profile: Profile | null
+  assets: Assets | null
+  loading: boolean
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, username: string, referralCode?: string) => Promise<{ error: Error | null }>
+  signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
+  refreshAssets: () => Promise<void>
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {

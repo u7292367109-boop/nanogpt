@@ -16,7 +16,9 @@ export default function BottomNav() {
   return (
     <nav className="bottom-nav">
       {navItems.map(({ path, icon: Icon, label }) => {
-        const active = pathname === path || (path !== '/home' && pathname.startsWith(path))
+        const active = pathname === path ||
+          (path === '/profile' && (pathname === '/profile' || pathname.startsWith('/my/'))) ||
+          (path !== '/home' && path !== '/profile' && pathname.startsWith(path))
         return (
           <Link
             key={path}

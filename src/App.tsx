@@ -30,6 +30,9 @@ import KYC from './pages/my/KYC'
 import Deposit from './pages/my/Deposit'
 import Withdraw from './pages/my/Withdraw'
 import AboutUs from './pages/my/AboutUs'
+import PowerItems from './pages/PowerItems'
+import PowerItemsBuy from './pages/PowerItemsBuy'
+import FundLogs from './pages/FundLogs'
 
 function App() {
   return (
@@ -64,6 +67,12 @@ function App() {
           <Route path="/my/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
           <Route path="/my/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
           <Route path="/my/about-us" element={<ProtectedRoute><AboutUs /></ProtectedRoute>} />
+
+          {/* New pages */}
+          <Route path="/poweritems" element={<ProtectedRoute><PowerItems /></ProtectedRoute>} />
+          <Route path="/poweritems/buy" element={<ProtectedRoute><PowerItemsBuy /></ProtectedRoute>} />
+          <Route path="/fundlogs" element={<ProtectedRoute><FundLogs /></ProtectedRoute>} />
+          <Route path="/my/index" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
