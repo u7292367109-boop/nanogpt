@@ -5,48 +5,55 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 
 // ── Wallet addresses per network ─────────────────────────────────────────
-// Update WALLET_ADDRESS with the real Trust Wallet TRC-20 address
-const WALLET_ADDRESS = 'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE'
-
 const NETWORKS = [
   {
-    id: 'USDT-TRC20',
-    label: 'USDT',
-    sub: 'TRC-20 · TRON',
-    badge: 'Recommended',
-    icon: '🟢',
-    minDeposit: 10,
-    fee: 'Free',
-    wallet: WALLET_ADDRESS,
+    id:           'USDT-TRC20',
+    label:        'USDT',
+    sub:          'TRC-20 · TRON',
+    badge:        'Recommended',
+    icon:         '🟢',
+    minDeposit:   10,
+    fee:          'Free',
+    wallet:       'TMmXkT82RznZHbCHyJ4jmStDKHpy4ZfG7b',
     confirmations: '~1 min',
   },
   {
-    id: 'USDT-ERC20',
-    label: 'USDT',
-    sub: 'ERC-20 · Ethereum',
-    badge: '',
-    icon: '🔵',
-    minDeposit: 50,
-    fee: '~$5',
-    wallet: WALLET_ADDRESS,
+    id:           'USDT-BEP20',
+    label:        'USDT',
+    sub:          'BEP-20 · BSC',
+    badge:        '',
+    icon:         '🟡',
+    minDeposit:   10,
+    fee:          'Free',
+    wallet:       '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
+    confirmations: '~1 min',
+  },
+  {
+    id:           'USDC-BEP20',
+    label:        'USDC',
+    sub:          'BEP-20 · BSC',
+    badge:        '',
+    icon:         '🔵',
+    minDeposit:   10,
+    fee:          'Free',
+    wallet:       '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
+    confirmations: '~1 min',
+  },
+  {
+    id:           'USDC-ERC20',
+    label:        'USDC',
+    sub:          'ERC-20 · Ethereum',
+    badge:        '',
+    icon:         '🔷',
+    minDeposit:   50,
+    fee:          '~$5',
+    wallet:       '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~3 min',
-  },
-  {
-    id: 'USDT-BEP20',
-    label: 'USDT',
-    sub: 'BEP-20 · BSC',
-    badge: '',
-    icon: '🟡',
-    minDeposit: 10,
-    fee: 'Free',
-    wallet: WALLET_ADDRESS,
-    confirmations: '~1 min',
   },
 ]
 
 const PRESETS = [50, 100, 500, 1000]
 
-// Simple countdown timer
 function useCountdown(seconds: number) {
   const [remaining, setRemaining] = useState(seconds)
   const ref = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -71,7 +78,7 @@ function CheckoutStep({
   submitting: boolean
 }) {
   const [copied, setCopied] = useState(false)
-  const timer = useCountdown(30 * 60) // 30-min window
+  const timer = useCountdown(30 * 60)
 
   function copy() {
     navigator.clipboard.writeText(network.wallet)
@@ -82,13 +89,12 @@ function CheckoutStep({
   return (
     <div className="px-4 pt-3 pb-6 space-y-4">
 
-      {/* Back row */}
       <button onClick={onBack} className="flex items-center gap-1.5 text-gray-400 active:text-white transition-colors">
         <ChevronLeft size={18} />
         <span className="text-sm">Change network / amount</span>
       </button>
 
-      {/* Order card */}
+      {/* Order summary */}
       <div className="rounded-2xl bg-gradient-to-br from-brand-900/70 via-green-950/50 to-surface-card border border-brand-500/25 p-4">
         <div className="flex items-center justify-between mb-4">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Order Summary</p>
@@ -100,7 +106,9 @@ function CheckoutStep({
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-gray-500 text-xs">Amount to send</span>
-            <span className="text-brand-400 font-extrabold text-xl">{amount} <span className="text-sm text-gray-400">USDT</span></span>
+            <span className="text-brand-400 font-extrabold text-xl">
+              {amount} <span className="text-sm text-gray-400">{network.label}</span>
+            </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-500 text-xs">Network</span>
@@ -120,25 +128,21 @@ function CheckoutStep({
       {/* QR + Address */}
       <div className="card text-center space-y-4">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-          Send exactly <span className="text-white">{amount} USDT</span> to this address
+          Send exactly <span className="text-white">{amount} {network.label}</span> to this address
         </p>
 
-        {/* QR code visual */}
+        {/* QR placeholder */}
         <div className="w-48 h-48 bg-white rounded-2xl mx-auto flex items-center justify-center p-2.5 shadow-[0_0_30px_rgba(0,210,106,0.15)]">
           <svg viewBox="0 0 256 256" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            {/* Top-left finder */}
-            <rect x="10" y="10" width="70" height="70" rx="6" fill="#111" />
-            <rect x="22" y="22" width="46" height="46" rx="3" fill="white" />
-            <rect x="32" y="32" width="26" height="26" rx="2" fill="#111" />
-            {/* Top-right finder */}
-            <rect x="176" y="10" width="70" height="70" rx="6" fill="#111" />
-            <rect x="188" y="22" width="46" height="46" rx="3" fill="white" />
-            <rect x="198" y="32" width="26" height="26" rx="2" fill="#111" />
-            {/* Bottom-left finder */}
-            <rect x="10" y="176" width="70" height="70" rx="6" fill="#111" />
-            <rect x="22" y="188" width="46" height="46" rx="3" fill="white" />
-            <rect x="32" y="198" width="26" height="26" rx="2" fill="#111" />
-            {/* Data modules */}
+            <rect x="10"  y="10"  width="70" height="70" rx="6" fill="#111" />
+            <rect x="22"  y="22"  width="46" height="46" rx="3" fill="white" />
+            <rect x="32"  y="32"  width="26" height="26" rx="2" fill="#111" />
+            <rect x="176" y="10"  width="70" height="70" rx="6" fill="#111" />
+            <rect x="188" y="22"  width="46" height="46" rx="3" fill="white" />
+            <rect x="198" y="32"  width="26" height="26" rx="2" fill="#111" />
+            <rect x="10"  y="176" width="70" height="70" rx="6" fill="#111" />
+            <rect x="22"  y="188" width="46" height="46" rx="3" fill="white" />
+            <rect x="32"  y="198" width="26" height="26" rx="2" fill="#111" />
             {[96,104,112,120,128,136,144,152,160,96,112,128,144,160,100,108,116,124,132,140,148,156,
               100,120,140,160,104,112,124,136,148,108,116,128,140,152,112,120,132,144,116,124,136,148,
               160,120,128,140,152,124,132,144,128,136,148,160,132,140,152,136,144,140,148,160].map((x, i) => (
@@ -147,7 +151,7 @@ function CheckoutStep({
           </svg>
         </div>
 
-        {/* Address box */}
+        {/* Address */}
         <div className="bg-surface-muted rounded-xl px-4 py-3 flex items-start gap-3 text-left">
           <p className="flex-1 text-xs text-gray-200 font-mono break-all leading-relaxed">{network.wallet}</p>
           <button
@@ -159,9 +163,7 @@ function CheckoutStep({
             {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
           </button>
         </div>
-        {copied && (
-          <p className="text-brand-400 text-xs font-semibold fade-in">✓ Address copied!</p>
-        )}
+        {copied && <p className="text-brand-400 text-xs font-semibold fade-in">✓ Address copied!</p>}
       </div>
 
       {/* Steps */}
@@ -170,7 +172,7 @@ function CheckoutStep({
         {[
           'Copy the wallet address above',
           `Open your wallet app and select ${network.sub.split('·')[1]?.trim()} network`,
-          `Send exactly ${amount} USDT to the address`,
+          `Send exactly ${amount} ${network.label} to the address`,
           'Return here and tap the button below',
         ].map((step, i) => (
           <div key={i} className="flex items-start gap-3">
@@ -182,7 +184,6 @@ function CheckoutStep({
         ))}
       </div>
 
-      {/* Confirm button */}
       <button
         onClick={onConfirm}
         disabled={submitting}
@@ -201,14 +202,14 @@ function CheckoutStep({
 
 export default function Deposit() {
   const { user, refreshAssets } = useAuth()
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep]           = useState<1 | 2>(1)
   const [selectedNet, setSelectedNet] = useState('USDT-TRC20')
-  const [amount, setAmount] = useState('')
+  const [amount, setAmount]       = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [done, setDone] = useState(false)
+  const [done, setDone]           = useState(false)
 
-  const network = NETWORKS.find(n => n.id === selectedNet)!
-  const amt = parseFloat(amount) || 0
+  const network    = NETWORKS.find(n => n.id === selectedNet)!
+  const amt        = parseFloat(amount) || 0
   const canProceed = amt >= network.minDeposit
 
   function handleProceed() {
@@ -221,16 +222,17 @@ export default function Deposit() {
     setSubmitting(true)
     await supabase.from('transactions').insert({
       user_id: user.id,
-      type: 'deposit',
-      amount: amt,
-      status: 'pending',
+      type:    'deposit',
+      amount:  amt,
+      status:  'pending',
+      note:    `${network.label} via ${network.sub}`,
     })
     await refreshAssets()
     setSubmitting(false)
     setDone(true)
   }
 
-  // ── Done screen ──────────────────────────────────────────────────────────
+  // ── Done screen ───────────────────────────────────────────────────────────
   if (done) {
     return (
       <Layout title="Deposit" showBack showActions={false}>
@@ -242,7 +244,8 @@ export default function Deposit() {
             <div>
               <h3 className="text-white font-extrabold text-xl mb-1">Payment Submitted</h3>
               <p className="text-gray-400 text-sm">
-                Your deposit of <span className="text-white font-bold">{amount} USDT</span> is being processed.
+                Your deposit of{' '}
+                <span className="text-white font-bold">{amount} {network.label}</span> is being processed.
               </p>
             </div>
             <div className="bg-surface-muted rounded-2xl p-4 text-left space-y-2">
@@ -271,7 +274,7 @@ export default function Deposit() {
     )
   }
 
-  // ── Step 2: Checkout ─────────────────────────────────────────────────────
+  // ── Step 2: Checkout ──────────────────────────────────────────────────────
   if (step === 2) {
     return (
       <Layout title="Payment" showBack={false} showActions={false}>
@@ -298,7 +301,7 @@ export default function Deposit() {
             {NETWORKS.map(n => (
               <button
                 key={n.id}
-                onClick={() => setSelectedNet(n.id)}
+                onClick={() => { setSelectedNet(n.id); setAmount('') }}
                 className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all active:scale-[0.98] ${
                   selectedNet === n.id
                     ? 'bg-brand-500/10 border-brand-500/50 shadow-brand-sm'
@@ -344,7 +347,9 @@ export default function Deposit() {
                 onChange={e => setAmount(e.target.value)}
                 min={network.minDeposit}
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">USDT</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">
+                {network.label}
+              </span>
             </div>
 
             {/* Quick presets */}
@@ -364,11 +369,10 @@ export default function Deposit() {
               ))}
             </div>
 
-            {/* Estimated credit */}
             {amt > 0 && (
               <div className="flex items-center justify-between pt-2 border-t border-surface-border">
                 <span className="text-xs text-gray-500">You will receive</span>
-                <span className="text-brand-400 font-extrabold">{amt.toFixed(2)} USDT</span>
+                <span className="text-brand-400 font-extrabold">{amt.toFixed(2)} {network.label}</span>
               </div>
             )}
           </div>
@@ -381,9 +385,9 @@ export default function Deposit() {
             <div>
               <p className="text-amber-300 text-xs font-bold mb-0.5">Important Notice</p>
               <p className="text-gray-400 text-xs leading-relaxed">
-                Only send <strong className="text-white">USDT</strong> via the{' '}
+                Only send <strong className="text-white">{network.label}</strong> via the{' '}
                 <strong className="text-white">{network.sub}</strong> network to avoid permanent loss.
-                Minimum deposit is <strong className="text-white">{network.minDeposit} USDT</strong>.
+                Minimum deposit is <strong className="text-white">{network.minDeposit} {network.label}</strong>.
               </p>
             </div>
           </div>
