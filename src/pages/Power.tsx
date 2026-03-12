@@ -46,6 +46,7 @@ export default function Power() {
   const [device, setDevice]          = useState<Device | null>(null)
   const [training, setTraining]      = useState(false)
   const [success, setSuccess]        = useState('')
+  const [claimError, setClaimError]  = useState('')
   const [alreadyClaimed, setClaimed] = useState(false)
   const [countdown, setCountdown]    = useState(0)
 
@@ -78,18 +79,22 @@ export default function Power() {
   }, [alreadyClaimed])
 
   async function handleClaimYield() {
-    if (!user || training || alreadyClaimed) return
+    if (!user) { setClaimError('Must be logged in.'); return }
+    if (training) return
+    if (alreadyClaimed) { setClaimError('Already claimed today. Resets at midnight UTC.'); return }
+    setClaimError(''); setSuccess('');
     setTraining(true)
 
     const earned = parseFloat(dailyYield.toFixed(3))
-    const { data: fresh } = await supabase.from('assets').select('*').eq('user_id', user.id).single()
-    if (!fresh) { setTraining(false); return }
+    const { data: fresh, error: fetchErr } = await supabase.from('assets').select('*').eq('user_id', user.id).single()
+    if (fetchErr || !fresh) { setClaimError('Unable to load balance. Please refresh.'); setTraining(false); return }
 
-    await supabase.from('assets').update({
+    const { error: updateErr } = await supabase.from('assets').update({
       daily_yield:        earned,
       total_yield:        parseFloat(((fresh.total_yield ?? 0) + earned).toFixed(3)),
       withdrawal_balance: parseFloat(((fresh.withdrawal_balance ?? 0) + earned).toFixed(3)),
     }).eq('user_id', user.id)
+    if (updateErr) { setClaimError('Failed to credit: ' + updateErr.message); setTraining(false); return }
 
     await supabase.from('transactions').insert({
       user_id: user.id,
@@ -118,7 +123,7 @@ export default function Power() {
           <div className="flex gap-3">
             <div className="flex-1 bg-surface-muted rounded-2xl p-4 text-center border border-surface-border">
               <p className="text-xs text-gray-500 mb-1">Daily Yield</p>
-              <p className="font-extrabold text-brand-400 text-xl">{formatUSDT(assets?.daily_yield ?? 0)}</p>
+              <p className="font-extrabold text-brand-400 text-xl">+{dailyYield.toFixed(3)}</p>
               <p className="text-xs text-gray-600 mt-0.5">USDT</p>
             </div>
             <div className="flex-1 bg-surface-muted rounded-2xl p-4 text-center border border-surface-border">
@@ -189,6 +194,11 @@ export default function Power() {
           {success && (
             <div className="mt-3 py-3 px-4 bg-brand-500/10 border border-brand-500/20 rounded-2xl text-center fade-in">
               <p className="text-brand-400 text-sm font-bold">{success}</p>
+            </div>
+          )}
+          {claimError && (
+            <div className="mt-3 py-3 px-4 bg-red-500/10 border border-red-500/20 rounded-2xl fade-in">
+              <p className="text-red-400 text-sm font-semibold">{claimError}</p>
             </div>
           )}
         </div>

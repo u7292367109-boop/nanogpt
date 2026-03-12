@@ -3,37 +3,29 @@ import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { generateUID, generateReferralCode, generateDeviceId } from '../lib/utils'
 
-interface Profile {
-  id: string
-  username: string
-  uid: string
-  referral_code: string
-  referred_by: string | null
-  level: number
-  avatar_url: string | null
-  language: string
-  created_at: string
-}
-
-interface Assets {
-  task_balance: number
-  vault_balance: number
-  withdrawal_balance: number
-  daily_yield: number
-  total_yield: number
-}
-
-interface AuthContextType {
-  user: User | null
-  session: Session | null
-  profile: Profile | null
-  assets: Assets | null
-  loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-  signUp: (email: string, password: string, username: string, referralCode?: string) => Promise<{ error: Error | null }>
-  signOut: () => Promise<void>
-  refreshProfile: () => Promise<void>
-  refreshAssets: () => Promise<void>
+function detectDeviceInfo() {
+  var ua = navigator.userAgent;
+  var model = "Computing Node", os = "Unknown OS", br = "Browser";
+  if (ua.indexOf("iPhone") > -1) {
+    model = "iPhone";
+    var m = ua.match(/iPhone OS ([d_]+)/); os = m ? "iOS " + m[1].replace(/_/g, ".") : "iOS";
+  } else if (ua.indexOf("Android") > -1) {
+    var mm = ua.match(/Android [d.]+; ([^;)]+)/); model = mm ? mm[1].trim() : "Android Device";
+    var vm = ua.match(/Android ([d.]+)/); os = vm ? "Android " + vm[1] : "Android";
+  } else if (ua.indexOf("Windows") > -1) {
+    model = "Windows PC"; os = "Windows 10/11";
+  } else if (ua.indexOf("Macintosh") > -1) {
+    model = "MacBook";
+    var mc = ua.match(/Mac OS X ([d_]+)/); os = mc ? "macOS " + mc[1].replace(/_/g, ".") : "macOS";
+  } else if (ua.indexOf("Linux") > -1) {
+    model = "Linux PC"; os = "Linux";
+  }
+  if (ua.includes("Edg/")) br = "Edge";
+  else if (ua.includes("OPR/") || ua.includes("Opera")) br = "Opera";
+  else if (ua.includes("Chrome/") && !ua.includes("Chromium")) br = "Chrome";
+  else if (ua.includes("Firefox/")) br = "Firefox";
+  else if (ua.includes("Safari/") && !ua.includes("Chrome")) br = "Safari";
+  return { model: model, platform: br + " · NanoGPT Node", os: os };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -119,12 +111,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       total_yield: 0,
     })
 
+    var di = detectDeviceInfo()
     await supabase.from('devices').insert({
-      user_id: data.user.id,
+      user_id:   data.user.id,
       device_id: generateDeviceId(),
-      model: 'iPhone',
-      platform: 'general node power center',
-      os: 'NanoGPT OS',
+      model:     di.model,
+      platform:  di.platform,
+      os:        di.os,
     })
 
     await supabase.from('kyc').insert({
