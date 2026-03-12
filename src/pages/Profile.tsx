@@ -72,7 +72,7 @@ export default function Profile() {
           <div className="grid grid-cols-3 gap-2 mt-3">
             {[
               { label: 'Task',       value: (assets?.task_balance ?? 0).toFixed(3),        to: '/my/orders'   },
-              { label: 'Vault',      value: (assets?.vault_balance ?? 0).toFixed(2),        to: '/my/deposit'  },
+              { label: 'Vault',      value: (assets?.vault_balance ?? 0).toFixed(3),        to: '/my/deposit'  },
               { label: 'Withdrawal', value: (assets?.withdrawal_balance ?? 0).toFixed(3),  to: '/my/withdraw' },
             ].map(({ label, value, to }) => (
               <Link key={label} to={to} className="bg-surface-card border border-surface-border rounded-xl p-3 text-center active:opacity-70">

@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import BottomNav from '../components/BottomNav'
 
+const YIELD_BY_LEVEL = [0.014, 0.025, 0.045, 0.08, 0.15, 0.30, 0.60]
+
 const BASE = 'https://ai.neogpt.club/assets'
 const BANNER_IMG = `${BASE}/banners/69a55be52a7b6657a46d9585420a55b1.png`
 const PARTNERS = [
@@ -20,10 +22,11 @@ const PARTNERS = [
 ]
 
 export default function Home() {
-  const { profile, assets } = useAuth()
+  const { user, profile, assets } = useAuth()
   const navigate = useNavigate()
   const [announcement, setAnnouncement] = useState('Partner Announcement')
   const [nodeCount] = useState('2000K')
+  const [deviceModel, setDeviceModel] = useState('Personal Node')
 
   useEffect(() => {
     supabase.from('notifications').select('title').eq('type', 'announcement')
@@ -31,12 +34,24 @@ export default function Home() {
       .then(({ data }) => { if (data?.title) setAnnouncement(data.title) })
   }, [])
 
-  const now = new Date()
-  const dayPct = (now.getHours() * 60 + now.getMinutes()) / (24 * 60)
-  const trainingProgress = Math.round(dayPct * 100)
+  useEffect(() => {
+    if (!user) return
+    supabase.from('devices').select('model').eq('user_id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.model) setDeviceModel(data.model) })
+  }, [user])
 
+  // Daily yield RATE based on level (what will be earned on next claim)
+  const userLevel   = profile?.level ?? 0
+  const yieldRate   = YIELD_BY_LEVEL[Math.min(userLevel, YIELD_BY_LEVEL.length - 1)]
+
+  // Displayed values from DB
   const dailyYield  = assets?.daily_yield  ?? 0
   const totalYield  = assets?.total_yield  ?? 0
+
+  // Training progress: 0% until training is active (total_yield > 0), then % of day
+  const now = new Date()
+  const dayPct = (now.getHours() * 60 + now.getMinutes()) / (24 * 60)
+  const trainingProgress = totalYield > 0 ? Math.round(dayPct * 100) : 0
 
   return (
     <div className="page-container bg-surface">
@@ -119,7 +134,7 @@ export default function Home() {
               </div>
               <div>
                 <p className="text-gray-400 text-xs">Daily yield</p>
-                <p className="text-brand-300 font-extrabold">+{dailyYield.toFixed(2)}USDT</p>
+                <p className="text-brand-300 font-extrabold">+{dailyYield.toFixed(3)}USDT</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -154,9 +169,9 @@ export default function Home() {
                 <span className="text-xl">🪙</span>
               </div>
               <div className="text-right">
-                <p className="text-gray-400 text-[10px]">{profile?.username ? 'Personal Node' : 'iPhone'}</p>
+                <p className="text-gray-400 text-[10px]">{deviceModel}</p>
                 <p className="text-white font-extrabold text-base">
-                  {(assets?.daily_yield ?? 0.014).toFixed(3)}
+                  {yieldRate.toFixed(3)}
                   <span className="text-gray-500 text-xs ml-1">USDT</span>
                 </p>
                 <Link to="/power" className="text-brand-400 text-xs font-bold">Claim &gt;</Link>
