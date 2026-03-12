@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Copy, CheckCircle, ChevronLeft, Clock, AlertTriangle, Loader2 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -7,52 +8,77 @@ import { supabase } from '../../lib/supabase'
 // ── Wallet addresses per network ─────────────────────────────────────────
 const NETWORKS = [
   {
-    id:           'USDT-TRC20',
-    label:        'USDT',
-    sub:          'TRC-20 · TRON',
-    badge:        'Recommended',
-    icon:         '🟢',
-    minDeposit:   10,
-    fee:          'Free',
-    wallet:       'TMmXkT82RznZHbCHyJ4jmStDKHpy4ZfG7b',
+    id:            'USDT-TRC20',
+    label:         'USDT',
+    sub:           'TRC-20 · TRON',
+    badge:         'Recommended',
+    icon:          '🟢',
+    minDeposit:    10,
+    fee:           'Free',
+    wallet:        'TMmXkT82RznZHbCHyJ4jmStDKHpy4ZfG7b',
     confirmations: '~1 min',
+    // TRON QR: just the raw address (universally compatible)
+    qrPrefix:      '',
   },
   {
-    id:           'USDT-BEP20',
-    label:        'USDT',
-    sub:          'BEP-20 · BSC',
-    badge:        '',
-    icon:         '🟡',
-    minDeposit:   10,
-    fee:          'Free',
-    wallet:       '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
+    id:            'USDT-BEP20',
+    label:         'USDT',
+    sub:           'BEP-20 · BSC',
+    badge:         '',
+    icon:          '🟡',
+    minDeposit:    10,
+    fee:           'Free',
+    wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~1 min',
+    qrPrefix:      'ethereum:',
   },
   {
-    id:           'USDC-BEP20',
-    label:        'USDC',
-    sub:          'BEP-20 · BSC',
-    badge:        '',
-    icon:         '🔵',
-    minDeposit:   10,
-    fee:          'Free',
-    wallet:       '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
+    id:            'USDC-BEP20',
+    label:         'USDC',
+    sub:           'BEP-20 · BSC',
+    badge:         '',
+    icon:          '🔵',
+    minDeposit:    10,
+    fee:           'Free',
+    wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~1 min',
+    qrPrefix:      'ethereum:',
   },
   {
-    id:           'USDC-ERC20',
-    label:        'USDC',
-    sub:          'ERC-20 · Ethereum',
-    badge:        '',
-    icon:         '🔷',
-    minDeposit:   50,
-    fee:          '~$5',
-    wallet:       '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
+    id:            'USDC-ERC20',
+    label:         'USDC',
+    sub:           'ERC-20 · Ethereum',
+    badge:         '',
+    icon:          '🔷',
+    minDeposit:    50,
+    fee:           '~$5',
+    wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~3 min',
+    qrPrefix:      'ethereum:',
   },
 ]
 
 const PRESETS = [50, 100, 500, 1000]
+
+// Builds the QR string: address with amount when possible
+function buildQrValue(network: typeof NETWORKS[0], amount: string): string {
+  const addr = network.wallet
+  const amt  = parseFloat(amount) || 0
+
+  if (network.id === 'USDT-TRC20') {
+    // TRON standard: tron:{address}?amount={value}
+    return amt > 0
+      ? `tron:${addr}?amount=${amt}`
+      : addr
+  }
+
+  // EIP-681 (ETH / BSC): ethereum:{address}?value=…
+  // For ERC-20 tokens we keep it simple — encode address + amount as query
+  // Most wallets (Trust Wallet, MetaMask) read the address correctly
+  return amt > 0
+    ? `${network.qrPrefix}${addr}?amount=${amt}`
+    : `${network.qrPrefix}${addr}`
+}
 
 function useCountdown(seconds: number) {
   const [remaining, setRemaining] = useState(seconds)
@@ -78,7 +104,8 @@ function CheckoutStep({
   submitting: boolean
 }) {
   const [copied, setCopied] = useState(false)
-  const timer = useCountdown(30 * 60)
+  const timer    = useCountdown(30 * 60)
+  const qrValue  = buildQrValue(network, amount)
 
   function copy() {
     navigator.clipboard.writeText(network.wallet)
@@ -125,53 +152,57 @@ function CheckoutStep({
         </div>
       </div>
 
-      {/* QR + Address */}
+      {/* QR code + address */}
       <div className="card text-center space-y-4">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-          Send exactly <span className="text-white">{amount} {network.label}</span> to this address
+          Scan to send <span className="text-white">{amount} {network.label}</span>
         </p>
 
-        {/* QR placeholder */}
-        <div className="w-48 h-48 bg-white rounded-2xl mx-auto flex items-center justify-center p-2.5 shadow-[0_0_30px_rgba(0,210,106,0.15)]">
-          <svg viewBox="0 0 256 256" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10"  y="10"  width="70" height="70" rx="6" fill="#111" />
-            <rect x="22"  y="22"  width="46" height="46" rx="3" fill="white" />
-            <rect x="32"  y="32"  width="26" height="26" rx="2" fill="#111" />
-            <rect x="176" y="10"  width="70" height="70" rx="6" fill="#111" />
-            <rect x="188" y="22"  width="46" height="46" rx="3" fill="white" />
-            <rect x="198" y="32"  width="26" height="26" rx="2" fill="#111" />
-            <rect x="10"  y="176" width="70" height="70" rx="6" fill="#111" />
-            <rect x="22"  y="188" width="46" height="46" rx="3" fill="white" />
-            <rect x="32"  y="198" width="26" height="26" rx="2" fill="#111" />
-            {[96,104,112,120,128,136,144,152,160,96,112,128,144,160,100,108,116,124,132,140,148,156,
-              100,120,140,160,104,112,124,136,148,108,116,128,140,152,112,120,132,144,116,124,136,148,
-              160,120,128,140,152,124,132,144,128,136,148,160,132,140,152,136,144,140,148,160].map((x, i) => (
-              <rect key={i} x={x} y={80 + (i % 13) * 12} width="8" height="8" rx="1" fill="#111" />
-            ))}
-          </svg>
+        {/* Real QR code */}
+        <div className="flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-3 shadow-[0_0_30px_rgba(0,210,106,0.2)]">
+            <QRCodeSVG
+              value={qrValue}
+              size={192}
+              bgColor="#ffffff"
+              fgColor="#111111"
+              level="M"
+              marginSize={0}
+            />
+          </div>
         </div>
 
-        {/* Address */}
+        <p className="text-[10px] text-gray-600 px-2">
+          Scan with Trust Wallet, MetaMask or any crypto wallet
+        </p>
+
+        {/* Address box */}
         <div className="bg-surface-muted rounded-xl px-4 py-3 flex items-start gap-3 text-left">
-          <p className="flex-1 text-xs text-gray-200 font-mono break-all leading-relaxed">{network.wallet}</p>
+          <p className="flex-1 text-xs text-gray-200 font-mono break-all leading-relaxed">
+            {network.wallet}
+          </p>
           <button
             onClick={copy}
             className={`shrink-0 p-2 rounded-lg transition-all ${
-              copied ? 'bg-brand-500/20 text-brand-400' : 'bg-surface-card text-gray-400 active:text-white'
+              copied
+                ? 'bg-brand-500/20 text-brand-400'
+                : 'bg-surface-card text-gray-400 active:text-white'
             }`}
           >
             {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
           </button>
         </div>
-        {copied && <p className="text-brand-400 text-xs font-semibold fade-in">✓ Address copied!</p>}
+        {copied && (
+          <p className="text-brand-400 text-xs font-semibold fade-in">✓ Address copied!</p>
+        )}
       </div>
 
       {/* Steps */}
       <div className="card space-y-3">
         <p className="section-title mb-0">Steps to complete</p>
         {[
-          'Copy the wallet address above',
-          `Open your wallet app and select ${network.sub.split('·')[1]?.trim()} network`,
+          `Scan the QR code or copy the address`,
+          `Open your wallet and select ${network.sub.split('·')[1]?.trim()} network`,
           `Send exactly ${amount} ${network.label} to the address`,
           'Return here and tap the button below',
         ].map((step, i) => (
@@ -202,11 +233,11 @@ function CheckoutStep({
 
 export default function Deposit() {
   const { user, refreshAssets } = useAuth()
-  const [step, setStep]           = useState<1 | 2>(1)
+  const [step, setStep]             = useState<1 | 2>(1)
   const [selectedNet, setSelectedNet] = useState('USDT-TRC20')
-  const [amount, setAmount]       = useState('')
+  const [amount, setAmount]         = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [done, setDone]           = useState(false)
+  const [done, setDone]             = useState(false)
 
   const network    = NETWORKS.find(n => n.id === selectedNet)!
   const amt        = parseFloat(amount) || 0
