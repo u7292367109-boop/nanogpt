@@ -5,16 +5,18 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import BottomNav from '../components/BottomNav'
 
+const BASE = 'https://ai.neogpt.club/assets'
+const BANNER_IMG = `${BASE}/banners/69a55be52a7b6657a46d9585420a55b1.png`
 const PARTNERS = [
-  { name: 'facebook',   emoji: '🔵' },
-  { name: 'Hugging Face', emoji: '🤗' },
-  { name: 'Google',    emoji: '🔴' },
-  { name: 'OpenAI',    emoji: '🟢' },
-  { name: 'Meta',      emoji: '🔷' },
-  { name: 'BioMap',    emoji: '⚡' },
-  { name: 'x.AI',      emoji: '✖️' },
-  { name: 'NVIDIA',    emoji: '💚' },
-  { name: 'Amazon',    emoji: '🟠' },
+  { name: 'facebook',    img: `${BASE}/partners/51f0048dff416cfcc63120a8ad64b4c8.png` },
+  { name: 'Hugging Face',img: `${BASE}/partners/aaee6d405723c715c260cff68ff6ee06.png` },
+  { name: 'Google',      img: `${BASE}/partners/243364cb5829a9e66a486b523ecbdbf2.png` },
+  { name: 'OpenAI',      img: `${BASE}/partners/b41bff43d3a632c3e0562f7baff4e61d.png` },
+  { name: 'Meta',        img: `${BASE}/partners/4efed7a6a90b7d48c432143a22ba2d76.png` },
+  { name: 'BioMap',      img: `${BASE}/partners/28b5d0bf6991a47ebbda1359bf41dfdc.png` },
+  { name: 'x.AI',        img: `${BASE}/partners/9549d9490470e0168a2be4ac1a363d9a.png` },
+  { name: 'NVIDIA',      img: `${BASE}/partners/77bd58ea3cea8e4116bdc4a043d7e193.png` },
+  { name: 'Amazon',      img: `${BASE}/partners/0c46e41a17462c4381aac3ef2773b13e.png` },
 ]
 
 export default function Home() {
@@ -65,45 +67,13 @@ export default function Home() {
 
       <main className="flex-1 overflow-y-auto overscroll-contain pb-4">
         {/* Hero banner */}
-        <div className="relative mx-0 overflow-hidden">
-          <div className="bg-gradient-to-br from-green-950 via-teal-950 to-brand-900 relative overflow-hidden" style={{ minHeight: '280px' }}>
-            {/* Background grid pattern */}
-            <div className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage: 'linear-gradient(rgba(52,211,153,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(52,211,153,0.3) 1px, transparent 1px)',
-                backgroundSize: '40px 40px',
-              }}
-            />
-            {/* Glow blobs */}
-            <div className="absolute top-0 left-0 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-0 w-48 h-48 bg-brand-500/20 rounded-full blur-3xl" />
-
-            <div className="relative z-10 px-6 py-8 flex items-center">
-              {/* Text */}
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-brand-500/80 flex items-center justify-center">
-                    <span className="text-white font-extrabold text-sm">N</span>
-                  </div>
-                  <span className="text-brand-300 font-bold text-sm">NeoGPT</span>
-                </div>
-                <h1 className="text-white font-extrabold text-3xl leading-tight mb-3">
-                  BUILD THE<br />
-                  INTELLIGENCE<br />
-                  OF TOMORROW<br />
-                  WITH <span className="text-brand-400">NEOGPT</span>
-                </h1>
-                <p className="text-gray-300 text-xs leading-relaxed">
-                  Turn unused computing power into<br />
-                  real-world intelligence and value.
-                </p>
-              </div>
-              {/* AI Robot illustration */}
-              <div className="w-32 h-44 rounded-2xl bg-gradient-to-b from-teal-800/40 to-brand-900/40 border border-brand-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                <span className="text-7xl">🤖</span>
-              </div>
-            </div>
-          </div>
+        <div className="relative mx-0 overflow-hidden rounded-xl mx-3 mt-2">
+          <img
+            src={BANNER_IMG}
+            alt="Banner"
+            className="w-full object-cover rounded-xl"
+            style={{ maxHeight: '300px' }}
+          />
         </div>
 
         {/* Notice bar */}
@@ -215,9 +185,8 @@ export default function Home() {
           <div className="bg-gradient-to-b from-surface-card to-green-950/20 border border-surface-border rounded-2xl p-4">
             <div className="grid grid-cols-3 gap-y-4 gap-x-2">
               {PARTNERS.map((p) => (
-                <div key={p.name} className="flex items-center justify-center gap-1.5 py-2">
-                  <span className="text-lg">{p.emoji}</span>
-                  <span className="text-gray-300 text-xs font-semibold">{p.name}</span>
+                <div key={p.name} className="flex items-center justify-center py-2">
+                  <img src={p.img} alt={p.name} className="h-7 object-contain" />
                 </div>
               ))}
             </div>

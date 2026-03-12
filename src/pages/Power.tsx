@@ -227,12 +227,12 @@ export default function Power() {
               </div>
 
               {orders.length === 0 ? (
-                <div className="bg-surface-card border border-surface-border rounded-2xl flex flex-col items-center justify-center py-12 gap-4">
-                  <span className="text-6xl">📦</span>
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <img src="https://ai.neogpt.club/assets/movement-start.png" alt="No data" className="w-40 h-40 object-contain" />
                   <p className="text-gray-500 text-sm">– No data –</p>
                   <button
                     onClick={() => navigate('/task')}
-                    className="px-6 py-2 rounded-full border border-surface-border text-gray-400 text-sm font-semibold"
+                    className="px-8 py-2 rounded-full border border-surface-border text-gray-400 text-sm font-semibold"
                   >
                     Go now
                   </button>
