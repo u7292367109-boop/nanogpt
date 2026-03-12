@@ -17,8 +17,7 @@ const NETWORKS = [
     fee:           'Free',
     wallet:        'TMmXkT82RznZHbCHyJ4jmStDKHpy4ZfG7b',
     confirmations: '~1 min',
-    // TRON QR: just the raw address (universally compatible)
-    qrPrefix:      '',
+    hint:          'In your wallet select: TRON network → USDT (TRC-20)',
   },
   {
     id:            'USDT-BEP20',
@@ -30,7 +29,7 @@ const NETWORKS = [
     fee:           'Free',
     wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~1 min',
-    qrPrefix:      'ethereum:',
+    hint:          'In your wallet select: BNB Smart Chain → USDT (BEP-20)',
   },
   {
     id:            'USDC-BEP20',
@@ -42,7 +41,7 @@ const NETWORKS = [
     fee:           'Free',
     wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~1 min',
-    qrPrefix:      'ethereum:',
+    hint:          'In your wallet select: BNB Smart Chain → USDC (BEP-20)',
   },
   {
     id:            'USDC-ERC20',
@@ -54,30 +53,19 @@ const NETWORKS = [
     fee:           '~$5',
     wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~3 min',
-    qrPrefix:      'ethereum:',
+    hint:          'In your wallet select: Ethereum network → USDC (ERC-20)',
   },
 ]
 
 const PRESETS = [50, 100, 500, 1000]
 
-// Builds the QR string: address with amount when possible
-function buildQrValue(network: typeof NETWORKS[0], amount: string): string {
-  const addr = network.wallet
-  const amt  = parseFloat(amount) || 0
-
-  if (network.id === 'USDT-TRC20') {
-    // TRON standard: tron:{address}?amount={value}
-    return amt > 0
-      ? `tron:${addr}?amount=${amt}`
-      : addr
-  }
-
-  // EIP-681 (ETH / BSC): ethereum:{address}?value=…
-  // For ERC-20 tokens we keep it simple — encode address + amount as query
-  // Most wallets (Trust Wallet, MetaMask) read the address correctly
-  return amt > 0
-    ? `${network.qrPrefix}${addr}?amount=${amt}`
-    : `${network.qrPrefix}${addr}`
+// QR code must encode ONLY the raw wallet address.
+// Prefixes like "ethereum:" or "tron:" make wallets send the NATIVE coin
+// (ETH / TRX) instead of the token (USDT / USDC).
+// Using a plain address is what Binance, OKX and all exchanges do —
+// the wallet recognises the address format and lets the user pick the token.
+function buildQrValue(network: typeof NETWORKS[0]): string {
+  return network.wallet
 }
 
 function useCountdown(seconds: number) {
@@ -105,7 +93,7 @@ function CheckoutStep({
 }) {
   const [copied, setCopied] = useState(false)
   const timer    = useCountdown(30 * 60)
-  const qrValue  = buildQrValue(network, amount)
+  const qrValue  = buildQrValue(network)
 
   function copy() {
     navigator.clipboard.writeText(network.wallet)
@@ -172,9 +160,11 @@ function CheckoutStep({
           </div>
         </div>
 
-        <p className="text-[10px] text-gray-600 px-2">
-          Scan with Trust Wallet, MetaMask or any crypto wallet
-        </p>
+        {/* Network hint — critical to avoid wrong-chain sends */}
+        <div className="mx-2 py-2 px-3 bg-amber-500/10 border border-amber-500/25 rounded-xl text-left">
+          <p className="text-amber-300 text-[10px] font-bold mb-0.5">⚠️ After scanning</p>
+          <p className="text-amber-200/80 text-[10px] leading-relaxed">{network.hint}</p>
+        </div>
 
         {/* Address box */}
         <div className="bg-surface-muted rounded-xl px-4 py-3 flex items-start gap-3 text-left">
@@ -201,10 +191,10 @@ function CheckoutStep({
       <div className="card space-y-3">
         <p className="section-title mb-0">Steps to complete</p>
         {[
-          `Scan the QR code or copy the address`,
-          `Open your wallet and select ${network.sub.split('·')[1]?.trim()} network`,
-          `Send exactly ${amount} ${network.label} to the address`,
-          'Return here and tap the button below',
+          'Scan the QR code or copy the address below',
+          network.hint,
+          `Send exactly ${amount} ${network.label} — double-check token and network`,
+          'Return here and tap "I\'ve Completed Payment"',
         ].map((step, i) => (
           <div key={i} className="flex items-start gap-3">
             <div className="w-6 h-6 rounded-full bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-xs text-brand-400 font-bold shrink-0 mt-0.5">
