@@ -140,6 +140,20 @@ export default function PowerItemsBuy() {
       </div>
 
       <div className="px-4 pt-4 pb-32 space-y-4">
+        {/* Vault balance display */}
+        <div className="bg-surface-card border border-surface-border rounded-2xl px-4 py-3 flex items-center justify-between">
+          <div>
+            <p className="text-gray-400 text-xs">Your Vault Balance</p>
+            <p className={`font-extrabold text-base ${(assets?.vault_balance ?? 0) >= totalPrice ? 'text-brand-400' : 'text-red-400'}`}>
+              {(assets?.vault_balance ?? 0).toFixed(3)} USDT
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-gray-400 text-xs">Required</p>
+            <p className="text-white font-bold text-base">{totalPrice.toFixed(2)} USDT</p>
+          </div>
+        </div>
+
         {/* Product card */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-4">
           <div className="flex items-start justify-between gap-3">

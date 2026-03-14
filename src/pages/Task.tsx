@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Info } from 'lucide-react'
+import { Info, Plus } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 
@@ -14,8 +14,9 @@ export const TASK_CATEGORIES = [
 ]
 
 export default function Task() {
-  const { profile } = useAuth()
+  const { profile, assets } = useAuth()
   const navigate = useNavigate()
+  const vaultBalance = assets?.vault_balance ?? 0
   const [activeTab, setActiveTab] = useState<'accelerator' | 'supercomputing'>('accelerator')
 
   const userLevel = profile?.level ?? 0
@@ -43,6 +44,21 @@ export default function Task() {
       </div>
 
       <div className="pb-6">
+        {/* Vault balance bar */}
+        <div className="mx-4 mt-4 flex items-center justify-between bg-surface-card border border-surface-border rounded-2xl px-4 py-3">
+          <div>
+            <p className="text-gray-400 text-xs">Vault Balance</p>
+            <p className="text-white font-extrabold text-base">{vaultBalance.toFixed(3)} <span className="text-gray-500 text-xs font-normal">USDT</span></p>
+            <p className="text-gray-600 text-[10px] mt-0.5">Used to purchase task packages below</p>
+          </div>
+          <button
+            onClick={() => navigate('/my/deposit')}
+            className="flex items-center gap-1.5 bg-brand-500 text-white text-xs font-bold px-3 py-2 rounded-xl"
+          >
+            <Plus size={13} /> Deposit
+          </button>
+        </div>
+
         {/* Level card */}
         <div className="mx-4 mt-4 rounded-2xl bg-surface-card border border-surface-border p-4">
           <div className="text-white font-extrabold text-4xl mb-4">LV.{userLevel}</div>

@@ -71,16 +71,17 @@ export default function Profile() {
           </div>
           <div className="grid grid-cols-3 gap-2 mt-3">
             {[
-              { label: 'Task',       value: (assets?.task_balance ?? 0).toFixed(3),        to: '/my/orders'   },
-              { label: 'Vault',      value: (assets?.vault_balance ?? 0).toFixed(3),        to: '/my/deposit'  },
-              { label: 'Withdrawal', value: (assets?.withdrawal_balance ?? 0).toFixed(3),  to: '/my/withdraw' },
-            ].map(({ label, value, to }) => (
+              { label: 'Task',       sub: 'Active orders',    value: (assets?.task_balance ?? 0).toFixed(3),       to: '/my/orders'   },
+              { label: 'Vault',      sub: 'Buy task packages',value: (assets?.vault_balance ?? 0).toFixed(3),       to: '/task'        },
+              { label: 'Withdrawal', sub: 'Withdraw earnings', value: (assets?.withdrawal_balance ?? 0).toFixed(3), to: '/my/withdraw' },
+            ].map(({ label, sub, value, to }) => (
               <Link key={label} to={to} className="bg-surface-card border border-surface-border rounded-xl p-3 text-center active:opacity-70">
                 <div className="flex items-center justify-center gap-1 mb-1">
                   <span className="text-brand-400 text-sm font-bold">🪙</span>
                   <span className="text-white font-extrabold text-sm">{value}</span>
                 </div>
                 <p className="text-gray-500 text-xs">{label}</p>
+                <p className="text-gray-600 text-[10px] mt-0.5 leading-tight">{sub}</p>
               </Link>
             ))}
           </div>
