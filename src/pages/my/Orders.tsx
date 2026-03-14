@@ -26,7 +26,7 @@ interface Transaction {
 
 const STATUS_META: Record<string, { icon: typeof Clock; color: string; label: string }> = {
   pending:   { icon: Clock,         color: 'text-amber-400',  label: 'Pending' },
-  active:    { icon: RefreshCw,     color: 'text-blue-400',   label: 'Processing' },
+  active:    { icon: RefreshCw,     color: 'text-blue-400',   label: 'Active' },
   completed: { icon: CheckCircle,   color: 'text-brand-400',  label: 'Completed' },
   failed:    { icon: XCircle,       color: 'text-red-400',    label: 'Failed' },
 }

@@ -124,28 +124,13 @@ function CheckoutStep({
           Send exactly <span className="text-white">{amount} USDT</span> to this address
         </p>
 
-        {/* QR code visual */}
+        {/* QR code — real encoding of wallet address */}
         <div className="w-48 h-48 bg-white rounded-2xl mx-auto flex items-center justify-center p-2.5 shadow-[0_0_30px_rgba(0,210,106,0.15)]">
-          <svg viewBox="0 0 256 256" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            {/* Top-left finder */}
-            <rect x="10" y="10" width="70" height="70" rx="6" fill="#111" />
-            <rect x="22" y="22" width="46" height="46" rx="3" fill="white" />
-            <rect x="32" y="32" width="26" height="26" rx="2" fill="#111" />
-            {/* Top-right finder */}
-            <rect x="176" y="10" width="70" height="70" rx="6" fill="#111" />
-            <rect x="188" y="22" width="46" height="46" rx="3" fill="white" />
-            <rect x="198" y="32" width="26" height="26" rx="2" fill="#111" />
-            {/* Bottom-left finder */}
-            <rect x="10" y="176" width="70" height="70" rx="6" fill="#111" />
-            <rect x="22" y="188" width="46" height="46" rx="3" fill="white" />
-            <rect x="32" y="198" width="26" height="26" rx="2" fill="#111" />
-            {/* Data modules */}
-            {[96,104,112,120,128,136,144,152,160,96,112,128,144,160,100,108,116,124,132,140,148,156,
-              100,120,140,160,104,112,124,136,148,108,116,128,140,152,112,120,132,144,116,124,136,148,
-              160,120,128,140,152,124,132,144,128,136,148,160,132,140,152,136,144,140,148,160].map((x, i) => (
-              <rect key={i} x={x} y={80 + (i % 13) * 12} width="8" height="8" rx="1" fill="#111" />
-            ))}
-          </svg>
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=2&data=${encodeURIComponent(network.wallet)}`}
+            alt="Wallet address QR code"
+            className="w-full h-full object-contain rounded-xl"
+          />
         </div>
 
         {/* Address box */}

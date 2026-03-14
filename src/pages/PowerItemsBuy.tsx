@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Loader2, CheckCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { PACKAGE_INFO, PID_TO_CATEGORY, calcLevel } from '../lib/packages'
+import { PID_TO_CATEGORY, calcLevel } from '../lib/packages'
 
 // All packages by ID — now sourced from shared lib
 const ALL_PACKAGES: Record<string, {

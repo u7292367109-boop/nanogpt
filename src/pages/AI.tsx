@@ -10,15 +10,15 @@ interface Message {
 const EXAMPLE_QUESTIONS = [
   'Why can idle mobile computing power earn money?',
   'What are the future opportunities of AI for everyone?',
-  'How can I maximize earnings on NanoGPT?',
+  'How can I maximize earnings on NeoGPT?',
   'How does the referral system work?',
 ]
 
 const AI_RESPONSES: Record<string, string> = {
-  default: "NanoGPT harnesses idle computing power from devices worldwide to train AI models. By participating, you contribute to the AI training ecosystem and earn USDT rewards in return. The more tasks you complete and the higher your level, the greater your earnings potential.",
-  earning: "You can earn on NanoGPT by: 1) Running training tasks on your device, 2) Inviting friends to join and earning team rewards (up to 10%), 3) Upgrading your level to access higher-return task types like Picture and Video tasks.",
+  default: "NeoGPT harnesses idle computing power from devices worldwide to train AI models. By participating, you contribute to the AI training ecosystem and earn USDT rewards in return. The more tasks you complete and the higher your level, the greater your earnings potential.",
+  earning: "You can earn on NeoGPT by: 1) Running training tasks on your device, 2) Inviting friends to join and earning team rewards (up to 10%), 3) Upgrading your level to access higher-return task types like Picture and Video tasks.",
   referral: "Our referral system rewards you with 3 tiers of team rewards. When your A-level invites earn, B-level invites earn, and C-level invites earn, you get a percentage of their yields based on your current level (ranging from 5%-10% for A-level, 3%-8% for B-level, 1%-6% for C-level).",
-  ai: "Artificial intelligence is creating massive demand for computing power. Traditional centralized data centers can't scale fast enough. NanoGPT bridges this gap by aggregating idle compute from millions of devices, enabling anyone to participate in and profit from the AI revolution.",
+  ai: "Artificial intelligence is creating massive demand for computing power. Traditional centralized data centers can't scale fast enough. NeoGPT bridges this gap by aggregating idle compute from millions of devices, enabling anyone to participate in and profit from the AI revolution.",
 }
 
 function getResponse(question: string): string {
@@ -67,7 +67,7 @@ export default function AI() {
             <Bot size={16} className="text-white" />
           </div>
           <div>
-            <p className="text-white font-semibold text-sm leading-none">NanoGPT AI</p>
+            <p className="text-white font-semibold text-sm leading-none">NeoGPT AI</p>
             <p className="text-xs text-green-400 mt-0.5">● Online</p>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function AI() {
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center mx-auto mb-4">
               <Bot size={32} className="text-white" />
             </div>
-            <h2 className="text-white font-bold text-xl mb-1">Welcome to NanoGPT AI</h2>
+            <h2 className="text-white font-bold text-xl mb-1">Welcome to NeoGPT AI</h2>
             <p className="text-gray-400 text-sm">Ask anything, get your answer</p>
           </div>
         )}
