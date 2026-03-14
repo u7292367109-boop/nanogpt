@@ -4,6 +4,7 @@ import { Globe, Headphones, Bell, ChevronRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import BottomNav from '../components/BottomNav'
+import { requestNotificationPermission } from '../lib/notify'
 
 const YIELD_BY_LEVEL = [0.014, 0.025, 0.045, 0.08, 0.15, 0.30, 0.60]
 
@@ -27,6 +28,15 @@ export default function Home() {
   const [announcement, setAnnouncement] = useState('Partner Announcement')
   const [nodeCount] = useState('2000K')
   const [deviceModel, setDeviceModel] = useState('Personal Node')
+  const [notifPerm, setNotifPerm] = useState<NotificationPermission>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  )
+
+  async function handleBellClick() {
+    const perm = await requestNotificationPermission()
+    setNotifPerm(perm)
+    navigate('/notifications')
+  }
 
   useEffect(() => {
     supabase.from('notifications').select('title').eq('type', 'announcement')
@@ -73,10 +83,12 @@ export default function Home() {
           <a href="#" className="w-9 h-9 flex items-center justify-center text-gray-400">
             <Headphones size={18} />
           </a>
-          <Link to="/notifications" className="w-9 h-9 flex items-center justify-center text-gray-400 relative">
-            <Bell size={18} />
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-400 rounded-full" />
-          </Link>
+          <button onClick={handleBellClick} className="w-9 h-9 flex items-center justify-center text-gray-400 relative">
+            <Bell size={18} className={notifPerm === 'granted' ? 'text-brand-400' : 'text-gray-400'} />
+            {notifPerm !== 'granted' && (
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+            )}
+          </button>
         </div>
       </div>
 

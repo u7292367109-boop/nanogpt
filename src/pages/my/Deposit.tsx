@@ -3,6 +3,7 @@ import { Copy, CheckCircle, ChevronLeft, Clock, AlertTriangle, Loader2 } from 'l
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { pushAndRecord } from '../../lib/notify'
 
 // ── Wallet addresses per network ─────────────────────────────────────────
 // Update WALLET_ADDRESS with the real Trust Wallet TRC-20 address
@@ -229,6 +230,13 @@ export default function Deposit() {
     var fr = await supabase.from('assets').select('vault_balance').eq('user_id', user.id).maybeSingle()
     if (fr.data) await supabase.from('assets').update({ vault_balance: parseFloat(((fr.data.vault_balance||0)+amt).toFixed(3)) }).eq('user_id', user.id)
     await refreshAssets()
+    // Push notification
+    await pushAndRecord(
+      user.id,
+      '💰 Deposit Submitted',
+      `Your deposit of ${amt.toFixed(2)} USDT is being processed.`,
+      'service',
+    )
     setSubmitting(false)
     setDone(true)
   }

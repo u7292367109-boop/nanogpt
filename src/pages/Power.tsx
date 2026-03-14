@@ -4,6 +4,7 @@ import { Loader2, CheckCircle, ChevronRight } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { pushAndRecord } from '../lib/notify'
 
 interface ActiveOrder {
   id: string
@@ -110,6 +111,13 @@ export default function Power() {
     setTraining(false)
     setSuccess(`+${earned.toFixed(3)} USDT credited!`)
     setTimeout(() => setSuccess(''), 5000)
+    // Push notification for yield claim
+    await pushAndRecord(
+      user.id,
+      '✅ Daily Yield Claimed',
+      `+${earned.toFixed(3)} USDT credited to your withdrawal balance. LV.${userLevel} node.`,
+      'service',
+    )
   }
 
   return (
