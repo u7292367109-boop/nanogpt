@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader2, CheckCircle, ChevronRight } from 'lucide-react'
+import { Loader2, CheckCircle, ChevronRight, TrendingUp, DollarSign, Layers, Wallet } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -139,28 +139,53 @@ export default function Power() {
       </div>
 
       <div className="pb-6">
-        {/* Stats bar - green gradient */}
-        <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-brand-900 via-green-900 to-emerald-800 p-4 border border-brand-500/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-brand-500/30 flex items-center justify-center">
-                <span className="text-brand-300 text-sm">📈</span>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs">Daily Yield</p>
-                <p className="text-brand-300 font-extrabold text-base">{assets?.daily_yield?.toFixed(3) ?? '0.000'} USDT</p>
-              </div>
+        {/* Earnings cards — 2×2 grid */}
+        <div className="mx-4 mt-4 grid grid-cols-2 gap-3">
+
+          {/* Daily Yield */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d2b1a] to-[#0a1f14] border border-brand-500/25 p-4">
+            <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-brand-500/10 blur-xl" />
+            <div className="w-9 h-9 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center mb-3">
+              <TrendingUp size={17} className="text-brand-400" />
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-brand-500/30 flex items-center justify-center">
-                <span className="text-brand-300 text-sm">🔄</span>
-              </div>
-              <div>
-                <p className="text-gray-400 text-xs">Total Yield</p>
-                <p className="text-white font-extrabold text-base">{assets?.total_yield?.toFixed(3) ?? '0.000'} USDT</p>
-              </div>
-            </div>
+            <p className="text-gray-400 text-[11px] font-medium mb-0.5">Daily Yield</p>
+            <p className="text-white font-extrabold text-xl leading-none">{(assets?.daily_yield ?? 0).toFixed(3)}</p>
+            <p className="text-brand-400 text-[10px] font-bold mt-0.5">USDT</p>
           </div>
+
+          {/* Total Yield */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d2b2b] to-[#071a1a] border border-emerald-500/25 p-4">
+            <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-emerald-500/10 blur-xl" />
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mb-3">
+              <DollarSign size={17} className="text-emerald-400" />
+            </div>
+            <p className="text-gray-400 text-[11px] font-medium mb-0.5">Total Yield</p>
+            <p className="text-white font-extrabold text-xl leading-none">{(assets?.total_yield ?? 0).toFixed(3)}</p>
+            <p className="text-emerald-400 text-[10px] font-bold mt-0.5">USDT</p>
+          </div>
+
+          {/* Task Balance (active investment) */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d1a2b] to-[#07121a] border border-blue-500/25 p-4">
+            <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-blue-500/10 blur-xl" />
+            <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-3">
+              <Layers size={17} className="text-blue-400" />
+            </div>
+            <p className="text-gray-400 text-[11px] font-medium mb-0.5">Task Balance</p>
+            <p className="text-white font-extrabold text-xl leading-none">{(assets?.task_balance ?? 0).toFixed(2)}</p>
+            <p className="text-blue-400 text-[10px] font-bold mt-0.5">USDT</p>
+          </div>
+
+          {/* Withdrawable */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#2b1a07] to-[#1a1007] border border-amber-500/25 p-4">
+            <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-amber-500/10 blur-xl" />
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-3">
+              <Wallet size={17} className="text-amber-400" />
+            </div>
+            <p className="text-gray-400 text-[11px] font-medium mb-0.5">Withdrawable</p>
+            <p className="text-white font-extrabold text-xl leading-none">{(assets?.withdrawal_balance ?? 0).toFixed(2)}</p>
+            <p className="text-amber-400 text-[10px] font-bold mt-0.5">USDT</p>
+          </div>
+
         </div>
 
         {/* Tabs */}
