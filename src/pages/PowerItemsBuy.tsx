@@ -21,10 +21,13 @@ const ALL_PACKAGES: Record<string, {
   'vid-2':  { name: 'Video Node II',            price: 10000,deadlines: 60, dailyHours: 2, totalYield: 150, maxPurchase: 1, totalEarnings: 15000.00,dailyEarnings: 250.00 },
 }
 
+const ADMIN_EMAIL = 'affiliatesflow@gmail.com'
+
 export default function PowerItemsBuy() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { user, assets, refreshAssets } = useAuth()
+  const isAdmin = user?.email === ADMIN_EMAIL
 
   const pid    = searchParams.get('pid') ?? 'text-1'
   const pkg    = ALL_PACKAGES[pid] ?? ALL_PACKAGES['text-1']
@@ -35,6 +38,7 @@ export default function PowerItemsBuy() {
   const [success, setSuccess]   = useState(false)
   const [error, setError]       = useState('')
 
+  const maxQty     = isAdmin ? 99 : pkg.maxPurchase
   const totalPrice = pkg.price * qty
 
   async function handleBuy() {
@@ -179,7 +183,7 @@ export default function PowerItemsBuy() {
               </button>
               <span className="text-white font-bold text-base w-6 text-center">{qty}</span>
               <button
-                onClick={() => setQty(q => Math.min(pkg.maxPurchase, q + 1))}
+                onClick={() => setQty(q => Math.min(maxQty, q + 1))}
                 className="w-8 h-8 rounded-lg bg-surface-muted border border-surface-border flex items-center justify-center text-white font-bold"
               >
                 +
@@ -195,7 +199,7 @@ export default function PowerItemsBuy() {
         {/* Max purchase info */}
         <div className="border border-dashed border-brand-500/40 rounded-2xl px-4 py-3">
           <p className="text-brand-400 text-sm text-center">
-            You can purchase up to {pkg.maxPurchase} items.
+            You can purchase up to {maxQty} items.
           </p>
         </div>
 

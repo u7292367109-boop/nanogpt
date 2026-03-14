@@ -23,6 +23,7 @@ interface Device {
 }
 
 const YIELD_BY_LEVEL = [0.014, 0.025, 0.045, 0.08, 0.15, 0.30, 0.60]
+const ADMIN_EMAIL = 'affiliatesflow@gmail.com'
 
 function getClaimKey(userId: string) {
   const d = new Date()
@@ -42,6 +43,7 @@ function formatCountdown(s: number) {
 
 export default function Power() {
   const { user, profile, assets, refreshAssets } = useAuth()
+  const isAdmin = user?.email === ADMIN_EMAIL
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'personal' | 'node'>('personal')
   const [device, setDevice]          = useState<Device | null>(null)
@@ -61,7 +63,7 @@ export default function Power() {
       .then(({ data }) => { if (data) setDevice(data) })
     supabase.from('orders').select('*').eq('user_id', user.id).eq('status', 'active').order('started_at', { ascending: false })
       .then(({ data }) => { if (data) setOrders(data) })
-    const claimed = hasClaimedToday(user.id)
+    const claimed = !isAdmin && hasClaimedToday(user.id)
     setClaimed(claimed)
     if (claimed) setCountdown(secondsUntilMidnightUTC())
   }, [user])
@@ -80,7 +82,7 @@ export default function Power() {
   async function handleClaimYield() {
     if (!user) { setClaimError('Must be logged in.'); return }
     if (training) return
-    if (alreadyClaimed) { setClaimError('Already claimed today. Resets at midnight UTC.'); return }
+    if (alreadyClaimed && !isAdmin) { setClaimError('Already claimed today. Resets at midnight UTC.'); return }
     setClaimError(''); setSuccess('')
     setTraining(true)
     const earned = parseFloat(dailyYield.toFixed(3))
