@@ -9,9 +9,6 @@ import { pushAndRecord } from '../../lib/notify'
 const MIN_WITHDRAW = 10
 const FEE = 1
 
-const MIN_WITHDRAW = 10
-const FEE = 1
-
 export default function Withdraw() {
   const { user, assets, refreshAssets } = useAuth()
   const [address, setAddress] = useState('')
