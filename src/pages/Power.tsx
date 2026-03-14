@@ -258,21 +258,38 @@ export default function Power() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {orders.map(order => (
-                    <div key={order.id} className="bg-surface-card border border-surface-border rounded-2xl px-4 py-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">{getTypeEmoji(order.task_type)}</span>
-                          <p className="text-white font-semibold text-sm">{getPackageName(order.task_type, order.investment_amount, order.return_rate)}</p>
+                  {orders.map(order => {
+                    const base     = order.started_at ? new Date(order.started_at) : new Date()
+                    const endDate  = new Date(base.getTime() + 60 * 24 * 60 * 60 * 1000)
+                    const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+                    const pct      = Math.min(100, Math.round(((Date.now() - base.getTime()) / (60 * 24 * 60 * 60 * 1000)) * 100))
+                    return (
+                      <div key={order.id} className="bg-surface-card border border-brand-500/20 rounded-2xl px-4 py-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">{getTypeEmoji(order.task_type)}</span>
+                            <p className="text-white font-semibold text-sm">{getPackageName(order.task_type, order.investment_amount, order.return_rate)}</p>
+                          </div>
+                          <span className="text-xs text-brand-400 font-semibold bg-brand-500/10 px-2 py-0.5 rounded-full">Active</span>
                         </div>
-                        <span className="text-xs text-brand-400 font-semibold bg-brand-500/10 px-2 py-0.5 rounded-full">Active</span>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Invested: {order.investment_amount} USDT</span>
+                          <span className="text-amber-400 font-semibold">Yield: {order.return_rate}%</span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden">
+                            <div className="h-full rounded-full bg-brand-500" style={{ width: pct + '%' }} />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-gray-600">
+                            <span>Completes: {endDate.toLocaleDateString()}</span>
+                            <span className={daysLeft <= 5 ? 'text-amber-400 font-bold' : ''}>
+                              {daysLeft === 0 ? 'Completing soon…' : daysLeft + 'd left'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>Investment: {order.investment_amount} USDT</span>
-                        <span>Yield: {order.return_rate}%</span>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>

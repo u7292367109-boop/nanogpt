@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Copy, CheckCircle, ChevronLeft, Clock, AlertTriangle, Loader2 } from 'lucide-react'
+import QRCode from 'react-qr-code'
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -124,12 +125,14 @@ function CheckoutStep({
           Send exactly <span className="text-white">{amount} USDT</span> to this address
         </p>
 
-        {/* QR code — real encoding of wallet address */}
-        <div className="w-48 h-48 bg-white rounded-2xl mx-auto flex items-center justify-center p-2.5 shadow-[0_0_30px_rgba(0,210,106,0.15)]">
-          <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=2&data=${encodeURIComponent(network.wallet)}`}
-            alt="Wallet address QR code"
-            className="w-full h-full object-contain rounded-xl"
+        {/* QR code — generated client-side (no external API) */}
+        <div className="w-48 h-48 bg-white rounded-2xl mx-auto flex items-center justify-center p-3 shadow-[0_0_30px_rgba(0,210,106,0.15)]">
+          <QRCode
+            value={network.wallet}
+            size={160}
+            bgColor="#FFFFFF"
+            fgColor="#000000"
+            style={{ width: '100%', height: '100%' }}
           />
         </div>
 

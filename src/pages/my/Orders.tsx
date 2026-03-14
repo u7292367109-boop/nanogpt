@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { ShoppingBag, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { getPackageName, getTypeEmoji } from '../../lib/packages'
+
+const DEADLINE_DAYS = 60
 
 interface Order {
   id: string
@@ -12,6 +14,7 @@ interface Order {
   return_rate: number
   status: string
   created_at: string
+  started_at: string | null
   completed_at: string | null
 }
 
@@ -25,10 +28,10 @@ interface Transaction {
 }
 
 const STATUS_META: Record<string, { icon: typeof Clock; color: string; label: string }> = {
-  pending:   { icon: Clock,         color: 'text-amber-400',  label: 'Pending' },
-  active:    { icon: RefreshCw,     color: 'text-blue-400',   label: 'Active' },
-  completed: { icon: CheckCircle,   color: 'text-brand-400',  label: 'Completed' },
-  failed:    { icon: XCircle,       color: 'text-red-400',    label: 'Failed' },
+  pending:   { icon: Clock,       color: 'text-amber-400', label: 'Pending'   },
+  active:    { icon: RefreshCw,   color: 'text-blue-400',  label: 'Active'    },
+  completed: { icon: CheckCircle, color: 'text-brand-400', label: 'Completed' },
+  failed:    { icon: XCircle,     color: 'text-red-400',   label: 'Failed'    },
 }
 
 const TX_TYPE_LABEL: Record<string, string> = {
@@ -40,46 +43,86 @@ const TX_TYPE_LABEL: Record<string, string> = {
   purchase:    '🛒 Task Purchase',
 }
 
+function getEndDate(order: Order): Date {
+  const base = order.started_at ? new Date(order.started_at) : new Date(order.created_at)
+  return new Date(base.getTime() + DEADLINE_DAYS * 24 * 60 * 60 * 1000)
+}
+
+function getDaysRemaining(order: Order): number {
+  return Math.max(0, Math.ceil((getEndDate(order).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+}
+
+function getProgressPct(order: Order): number {
+  const base = order.started_at ? new Date(order.started_at) : new Date(order.created_at)
+  const elapsed = Date.now() - base.getTime()
+  const total = DEADLINE_DAYS * 24 * 60 * 60 * 1000
+  return Math.min(100, Math.round((elapsed / total) * 100))
+}
+
 export default function Orders() {
   const { user } = useAuth()
-  const [tab, setTab]               = useState<'orders' | 'history'>('orders')
-  const [orders, setOrders]         = useState<Order[]>([])
-  const [transactions, setTx]       = useState<Transaction[]>([])
-  const [loading, setLoading]       = useState(true)
+  const [tab, setTab]         = useState<'orders' | 'history'>('orders')
+  const [orders, setOrders]   = useState<Order[]>([])
+  const [transactions, setTx] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!user) return
     setLoading(true)
-    Promise.all([
-      supabase.from('orders')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false }),
-      supabase.from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false }),
-    ]).then(([ordRes, txRes]) => {
-      if (ordRes.data) setOrders(ordRes.data)
-      if (txRes.data)  setTx(txRes.data)
-      setLoading(false)
-    })
+
+    const [ordRes, txRes] = await Promise.all([
+      supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+    ])
+
+    const fetchedOrders: Order[] = ordRes.data ?? []
+
+    // Auto-complete expired active orders
+    const expired = fetchedOrders.filter(o => o.status === 'active' && getDaysRemaining(o) === 0)
+    if (expired.length > 0) {
+      await Promise.all(expired.map(async (order) => {
+        const total  = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
+        const profit = parseFloat((total - order.investment_amount).toFixed(2))
+        const { data: updated } = await supabase
+          .from('orders')
+          .update({ status: 'completed', completed_at: new Date().toISOString() })
+          .eq('id', order.id).eq('status', 'active').select()
+        if (updated && updated.length > 0) {
+          const { data: assets } = await supabase
+            .from('assets').select('task_balance,withdrawal_balance').eq('user_id', user.id).maybeSingle()
+          if (assets) {
+            await supabase.from('assets').update({
+              task_balance:       parseFloat(Math.max(0, (assets.task_balance ?? 0) - order.investment_amount).toFixed(2)),
+              withdrawal_balance: parseFloat(((assets.withdrawal_balance ?? 0) + total).toFixed(2)),
+            }).eq('user_id', user.id)
+          }
+          await supabase.from('transactions').insert({
+            user_id: user.id, type: 'task_profit', amount: profit, status: 'approved',
+            note: `Task completed — ${order.task_type} node (60-day cycle)`,
+          })
+        }
+      }))
+      const refreshed = await supabase
+        .from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+      setOrders(refreshed.data ?? [])
+    } else {
+      setOrders(fetchedOrders)
+    }
+
+    if (txRes.data) setTx(txRes.data)
+    setLoading(false)
   }, [user])
+
+  useEffect(() => { loadData() }, [loadData])
 
   return (
     <Layout title="My Orders" showBack showActions={false}>
-      {/* Tabs */}
       <div className="flex gap-2 px-4 pt-4 pb-2">
         {(['orders', 'history'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
+          <button key={t} onClick={() => setTab(t)}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              tab === t
-                ? 'bg-brand-500 text-white'
-                : 'bg-surface-muted text-gray-500 border border-surface-border'
-            }`}
-          >
+              tab === t ? 'bg-brand-500 text-white' : 'bg-surface-muted text-gray-500 border border-surface-border'
+            }`}>
             {t === 'orders' ? '📋 Task Orders' : '📜 History'}
           </button>
         ))}
@@ -100,10 +143,13 @@ export default function Orders() {
           ) : (
             <div className="space-y-3 mt-2">
               {orders.map((order) => {
-                const meta    = STATUS_META[order.status] ?? STATUS_META.pending
-                const Icon    = meta.icon
-                const profit  = parseFloat(((order.investment_amount * order.return_rate / 100) - order.investment_amount).toFixed(2))
-                const total   = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
+                const meta        = STATUS_META[order.status] ?? STATUS_META.pending
+                const Icon        = meta.icon
+                const profit      = parseFloat(((order.investment_amount * order.return_rate / 100) - order.investment_amount).toFixed(2))
+                const total       = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
+                const endDate     = getEndDate(order)
+                const daysLeft    = getDaysRemaining(order)
+                const progressPct = order.status === 'active' ? getProgressPct(order) : (order.status === 'completed' ? 100 : 0)
 
                 return (
                   <div key={order.id} className={`card ${order.status === 'active' ? 'border-brand-500/30' : ''}`}>
@@ -144,10 +190,35 @@ export default function Orders() {
                       </div>
                     </div>
 
+                    {order.status === 'active' && (
+                      <div className="mt-3 pt-3 border-t border-surface-border space-y-2">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-gray-500">{DEADLINE_DAYS}-day cycle progress</span>
+                          <span className="text-brand-400 font-bold">{progressPct}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden">
+                          <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${progressPct}%` }} />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                          <span>Completes: {endDate.toLocaleDateString()}</span>
+                          <span className={daysLeft <= 5 ? 'text-amber-400 font-bold' : ''}>
+                            {daysLeft === 0 ? 'Completing…' : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left`}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     {order.status === 'completed' && (
-                      <div className="mt-2 pt-2 border-t border-surface-border flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Total received</span>
-                        <span className="text-brand-400 font-extrabold">{total.toFixed(2)} USDT</span>
+                      <div className="mt-2 pt-2 border-t border-surface-border">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Total received</span>
+                          <span className="text-brand-400 font-extrabold">{total.toFixed(2)} USDT</span>
+                        </div>
+                        {order.completed_at && (
+                          <p className="text-[10px] text-gray-600 mt-0.5 text-right">
+                            Completed {new Date(order.completed_at).toLocaleDateString()}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -166,10 +237,8 @@ export default function Orders() {
               {transactions.map((tx, i) => {
                 const positive = tx.amount > 0
                 return (
-                  <div
-                    key={tx.id}
-                    className={`flex items-center gap-3 px-4 py-3.5 ${i < transactions.length - 1 ? 'border-b border-surface-border' : ''}`}
-                  >
+                  <div key={tx.id}
+                    className={`flex items-center gap-3 px-4 py-3.5 ${i < transactions.length - 1 ? 'border-b border-surface-border' : ''}`}>
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm ${positive ? 'bg-brand-500/10' : 'bg-red-500/10'}`}>
                       {tx.type === 'deposit' ? '↓' : tx.type === 'withdrawal' ? '↑' : tx.type === 'yield' ? '⚡' : tx.type === 'task_profit' ? '✅' : tx.type === 'purchase' ? '🛒' : '👥'}
                     </div>
