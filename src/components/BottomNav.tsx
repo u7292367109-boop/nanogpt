@@ -1,22 +1,26 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Zap, ListTodo, Home, Bot, User } from 'lucide-react'
 import { cn } from '../lib/utils'
-
-const navItems = [
-  { path: '/task',    icon: ListTodo, label: 'Task'    },
-  { path: '/power',   icon: Zap,      label: 'Power'   },
-  { path: '/home',    icon: Home,     label: 'Home'    },
-  { path: '/ai',      icon: Bot,      label: 'AI'      },
-  { path: '/profile', icon: User,     label: 'Profile' },
-]
+import { useLang } from '../context/LanguageContext'
 
 export default function BottomNav() {
   const { pathname } = useLocation()
+  const { t } = useLang()
+
+  const navItems = [
+    { path: '/task',    icon: ListTodo, label: t('nav_task')    },
+    { path: '/power',   icon: Zap,      label: t('nav_power')   },
+    { path: '/home',    icon: Home,     label: t('nav_home')    },
+    { path: '/ai',      icon: Bot,      label: t('nav_ai')      },
+    { path: '/profile', icon: User,     label: t('nav_profile') },
+  ]
 
   return (
     <nav className="bottom-nav">
       {navItems.map(({ path, icon: Icon, label }) => {
-        const active = pathname === path || (path !== '/home' && pathname.startsWith(path))
+        const active = pathname === path ||
+          (path === '/profile' && (pathname === '/profile' || pathname.startsWith('/my/'))) ||
+          (path !== '/home' && path !== '/profile' && pathname.startsWith(path))
         return (
           <Link
             key={path}

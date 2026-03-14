@@ -1,10 +1,11 @@
 import { ChevronLeft, Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { useLang } from '../context/LanguageContext'
+import type { LangCode } from '../lib/i18n'
 
-const LANGUAGES = [
+const LANGUAGES: { code: LangCode; name: string; native: string }[] = [
   { code: 'EN', name: 'English',    native: 'English'   },
   { code: 'PT', name: 'Portuguese', native: 'Português' },
   { code: 'ES', name: 'Spanish',    native: 'Español'   },
@@ -18,20 +19,14 @@ const LANGUAGES = [
 ]
 
 export default function Language() {
-  const { user, profile } = useAuth()
-  const [selected, setSelected] = useState(
-    profile?.language ?? localStorage.getItem('lang') ?? 'EN'
-  )
-  const [saved, setSaved] = useState(false)
+  const { user } = useAuth()
+  const { lang, setLang, t } = useLang()
 
-  async function handleSelect(code: string) {
-    setSelected(code)
-    localStorage.setItem('lang', code)
+  async function handleSelect(code: LangCode) {
+    setLang(code)          // updates context + localStorage immediately
     if (user) {
       await supabase.from('profiles').update({ language: code }).eq('id', user.id)
     }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
   }
 
   return (
@@ -39,9 +34,11 @@ export default function Language() {
       <header className="flex items-center justify-between px-4 py-3 bg-surface-card border-b border-surface-border sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <Link to={-1 as never} className="text-gray-400"><ChevronLeft size={22} /></Link>
-          <h1 className="text-white font-semibold">Language</h1>
+          <h1 className="text-white font-semibold">{t('language')}</h1>
         </div>
-        {saved && <span className="text-brand-400 text-xs font-bold fade-in">✓ Saved</span>}
+        <span className="text-brand-400 text-xs font-bold">
+          {LANGUAGES.find(l => l.code === lang)?.native ?? 'EN'}
+        </span>
       </header>
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-6">
         <div className="card p-0 overflow-hidden">
@@ -55,7 +52,7 @@ export default function Language() {
                 <p className="text-white text-sm font-medium">{native}</p>
                 <p className="text-gray-500 text-xs">{name}</p>
               </div>
-              {selected === code && <Check size={16} className="text-brand-400" />}
+              {lang === code && <Check size={16} className="text-brand-400" />}
             </button>
           ))}
         </div>

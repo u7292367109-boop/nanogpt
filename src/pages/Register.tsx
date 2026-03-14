@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Cpu, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Register() {
-  const [form, setForm]             = useState({ username: '', email: '', password: '', referralCode: '' })
+  const [searchParams] = useSearchParams()
+  const [form, setForm]             = useState({ username: '', email: '', password: '', referralCode: searchParams.get('ref') ?? '' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError]           = useState('')
   const [loading, setLoading]       = useState(false)

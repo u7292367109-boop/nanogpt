@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { LanguageProvider } from './context/LanguageContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppShell from './components/AppShell'
 
@@ -20,7 +21,6 @@ import Notifications from './pages/Notifications'
 import NodePartner from './pages/NodePartner'
 import Tutorials from './pages/Tutorials'
 import Language from './pages/Language'
-import Accelerate from './pages/Accelerate'
 
 // My pages
 import Device from './pages/my/Device'
@@ -31,47 +31,63 @@ import KYC from './pages/my/KYC'
 import Deposit from './pages/my/Deposit'
 import Withdraw from './pages/my/Withdraw'
 import AboutUs from './pages/my/AboutUs'
+import PowerItems from './pages/PowerItems'
+import PowerItemsBuy from './pages/PowerItemsBuy'
+import FundLogs from './pages/FundLogs'
+
+// Admin
+import Admin from './pages/Admin'
 
 function App() {
   return (
     <AppShell>
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/privacy" element={<Privacy />} />
+      <AuthProvider>
+        <LanguageProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/privacy" element={<Privacy />} />
 
-          {/* Protected */}
-          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/power" element={<ProtectedRoute><Power /></ProtectedRoute>} />
-          <Route path="/task" element={<ProtectedRoute><Task /></ProtectedRoute>} />
-          <Route path="/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-          <Route path="/node-partner" element={<ProtectedRoute><NodePartner /></ProtectedRoute>} />
-          <Route path="/tutorials" element={<ProtectedRoute><Tutorials /></ProtectedRoute>} />
-          <Route path="/lang" element={<ProtectedRoute><Language /></ProtectedRoute>} />
-          <Route path="/accelerate" element={<ProtectedRoute><Accelerate /></ProtectedRoute>} />
+              {/* Admin — protected by email check inside Admin.tsx */}
+              <Route path="/admin" element={<Admin />} />
 
-          {/* My pages */}
-          <Route path="/my/device" element={<ProtectedRoute><Device /></ProtectedRoute>} />
-          <Route path="/my/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
-          <Route path="/my/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-          <Route path="/my/share" element={<ProtectedRoute><Share /></ProtectedRoute>} />
-          <Route path="/my/kyc" element={<ProtectedRoute><KYC /></ProtectedRoute>} />
-          <Route path="/my/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
-          <Route path="/my/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
-          <Route path="/my/about-us" element={<ProtectedRoute><AboutUs /></ProtectedRoute>} />
+              {/* Protected */}
+              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/power" element={<ProtectedRoute><Power /></ProtectedRoute>} />
+              <Route path="/task" element={<ProtectedRoute><Task /></ProtectedRoute>} />
+              <Route path="/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/node-partner" element={<ProtectedRoute><NodePartner /></ProtectedRoute>} />
+              <Route path="/tutorials" element={<ProtectedRoute><Tutorials /></ProtectedRoute>} />
+              <Route path="/lang" element={<ProtectedRoute><Language /></ProtectedRoute>} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+              {/* My pages */}
+              <Route path="/my/device" element={<ProtectedRoute><Device /></ProtectedRoute>} />
+              <Route path="/my/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
+              <Route path="/my/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+              <Route path="/my/share" element={<ProtectedRoute><Share /></ProtectedRoute>} />
+              <Route path="/my/kyc" element={<ProtectedRoute><KYC /></ProtectedRoute>} />
+              <Route path="/my/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
+              <Route path="/my/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
+              <Route path="/my/about-us" element={<ProtectedRoute><AboutUs /></ProtectedRoute>} />
+
+              {/* New pages */}
+              <Route path="/poweritems" element={<ProtectedRoute><PowerItems /></ProtectedRoute>} />
+              <Route path="/poweritems/buy" element={<ProtectedRoute><PowerItemsBuy /></ProtectedRoute>} />
+              <Route path="/fundlogs" element={<ProtectedRoute><FundLogs /></ProtectedRoute>} />
+              <Route path="/my/index" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </LanguageProvider>
+      </AuthProvider>
     </AppShell>
   )
 }

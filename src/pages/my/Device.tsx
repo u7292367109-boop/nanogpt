@@ -12,16 +12,49 @@ interface DeviceInfo {
   ip: string | null
 }
 
+function detectUA() {
+  const ua = navigator.userAgent
+  let model = 'Computing Node', os = 'Unknown OS', br = 'Browser'
+  if (ua.indexOf('iPhone') > -1) {
+    model = 'iPhone'
+    const m = ua.match(/iPhone OS ([\d_]+)/); os = m ? 'iOS ' + m[1].replace(/_/g, '.') : 'iOS'
+  } else if (ua.indexOf('Android') > -1) {
+    const mm = ua.match(/Android [\d.]+; ([^;)]+)/); model = mm ? mm[1].trim() : 'Android Device'
+    const vm = ua.match(/Android ([\d.]+)/); os = vm ? 'Android ' + vm[1] : 'Android'
+  } else if (ua.indexOf('Windows') > -1) {
+    model = 'Windows PC'; os = 'Windows 10/11'
+  } else if (ua.indexOf('Macintosh') > -1) {
+    model = 'MacBook'
+    const mc = ua.match(/Mac OS X ([\d_]+)/); os = mc ? 'macOS ' + mc[1].replace(/_/g, '.') : 'macOS'
+  } else if (ua.indexOf('Linux') > -1) {
+    model = 'Linux PC'; os = 'Linux'
+  }
+  if (ua.includes('Edg/')) br = 'Edge'
+  else if (ua.includes('OPR/') || ua.includes('Opera')) br = 'Opera'
+  else if (ua.includes('Chrome/') && !ua.includes('Chromium')) br = 'Chrome'
+  else if (ua.includes('Firefox/')) br = 'Firefox'
+  else if (ua.includes('Safari/') && !ua.includes('Chrome')) br = 'Safari'
+  return { model, platform: br + ' · NanoGPT Node', os }
+}
+
 export default function Device() {
   const { user } = useAuth()
   const [device, setDevice] = useState<DeviceInfo | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user) {
-      supabase.from('devices').select('*').eq('user_id', user.id).single().then(({ data }) => {
-        if (data) setDevice(data)
-      })
-    }
+    if (!user) return
+    var det = detectUA()
+    supabase.from('devices').select('*').eq('user_id', user.id).maybeSingle().then(async function({ data }) {
+      if (data) {
+        var needs = (data.model==='iPhone'&&det.model!=='iPhone')||data.os==='NanoGPT OS'||data.os==='Unknown OS'
+        if (needs) { await supabase.from('devices').update({ model: det.model, platform: det.platform, os: det.os }).eq('user_id', user.id); setDevice(Object.assign({}, data, det)) }
+        else setDevice(data)
+      } else {
+        setDevice({ device_id: user.id.replace(/-/g,'').slice(0,32), model: det.model, platform: det.platform, os: det.os, ip: null })
+      }
+      setLoading(false)
+    })
   }, [user])
 
   const fields = device ? [
@@ -39,11 +72,17 @@ export default function Device() {
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-green-950 to-emerald-900 flex items-center justify-center text-4xl mb-3 glow-pulse">
             📱
           </div>
-          <p className="text-white font-bold text-lg">{device?.model ?? 'Loading...'}</p>
+          <p className="text-white font-bold text-lg">{loading ? 'Detecting device…' : (device?.model ?? 'Computing Node')}</p>
           <p className="text-gray-400 text-xs mt-1">General Node Power Center</p>
         </div>
 
-        <div className="card p-0 overflow-hidden">
+        {loading ? (
+          <div className="card flex items-center justify-center py-10 gap-2">
+            <Cpu size={18} className="text-brand-400 animate-spin" />
+            <span className="text-gray-400 text-sm">Loading device info…</span>
+          </div>
+        ) : (
+          <div className="card p-0 overflow-hidden">
           {fields.map(({ icon: Icon, label, value, mono }) => (
             <div key={label} className="flex items-start gap-3 p-4 border-b border-surface-border last:border-0">
               <Icon size={16} className="text-brand-400 mt-0.5 flex-shrink-0" />
@@ -53,7 +92,8 @@ export default function Device() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         <div className="card bg-brand-500/10 border-brand-500/20">
           <div className="flex items-center gap-2 mb-2">

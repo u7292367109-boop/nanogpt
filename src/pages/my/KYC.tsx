@@ -12,7 +12,7 @@ export default function KYC() {
 
   useEffect(() => {
     if (user) {
-      supabase.from('kyc').select('*').eq('user_id', user.id).single().then(({ data }) => {
+      supabase.from('kyc').select('*').eq('user_id', user.id).maybeSingle().then(({ data }) => {
         if (data) {
           setStatus(data.status)
           if (data.full_name) setForm(f => ({ ...f, full_name: data.full_name ?? '' }))

@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { Play, Zap, TrendingUp, ChevronRight, Loader2, Cpu, CheckCircle, Rocket } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Loader2, CheckCircle, ChevronRight } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
-import { formatUSDT } from '../lib/utils'
 import { supabase } from '../lib/supabase'
+import { pushAndRecord } from '../lib/notify'
+import { getPackageName, getTypeEmoji } from '../lib/packages'
+
+interface ActiveOrder {
+  id: string
+  task_type: string
+  investment_amount: number
+  return_rate: number
+  started_at: string
+  status: string
+}
 
 interface Device {
   device_id: string
@@ -13,98 +23,52 @@ interface Device {
   os: string
 }
 
-interface AcceleratorOrder {
-  id: string
-  return_rate: number
-  started_at: string | null
-  created_at: string
-}
-
 const YIELD_BY_LEVEL = [0.014, 0.025, 0.045, 0.08, 0.15, 0.30, 0.60]
+const ADMIN_EMAIL = 'affiliatesflow@gmail.com'
 
 function getClaimKey(userId: string) {
   const d = new Date()
   return `yield_claimed_${userId}_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`
 }
-
-function hasClaimedToday(userId: string): boolean {
-  return localStorage.getItem(getClaimKey(userId)) === '1'
-}
-
-function markClaimedToday(userId: string) {
-  localStorage.setItem(getClaimKey(userId), '1')
-}
-
-function secondsUntilMidnightUTC(): number {
+function hasClaimedToday(userId: string) { return localStorage.getItem(getClaimKey(userId)) === '1' }
+function markClaimedToday(userId: string) { localStorage.setItem(getClaimKey(userId), '1') }
+function secondsUntilMidnightUTC() {
   const now = new Date()
   const midnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1))
   return Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 1000))
 }
-
-function formatCountdown(secs: number): string {
-  const h = Math.floor(secs / 3600)
-  const m = Math.floor((secs % 3600) / 60)
-  const s = secs % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
-
-function getDaysRemaining(dateStr: string): number {
-  const daysElapsed = (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24)
-  return Math.max(0, Math.floor(60 - daysElapsed))
+function formatCountdown(s: number) {
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
 }
 
 export default function Power() {
   const { user, profile, assets, refreshAssets } = useAuth()
+  const isAdmin = user?.email === ADMIN_EMAIL
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<'personal' | 'node'>('personal')
   const [device, setDevice]          = useState<Device | null>(null)
-  const [activeAcc, setActiveAcc]    = useState<AcceleratorOrder | null>(null)
+  const [orders, setOrders]          = useState<ActiveOrder[]>([])
   const [training, setTraining]      = useState(false)
   const [success, setSuccess]        = useState('')
+  const [claimError, setClaimError]  = useState('')
   const [alreadyClaimed, setClaimed] = useState(false)
   const [countdown, setCountdown]    = useState(0)
 
-  const userLevel      = profile?.level ?? 0
-  const baseDailyYield = YIELD_BY_LEVEL[Math.min(userLevel, YIELD_BY_LEVEL.length - 1)]
-  const dailyYield     = activeAcc ? activeAcc.return_rate : baseDailyYield
-
-  const now      = new Date()
-  const dayPct   = (now.getHours() * 60 + now.getMinutes()) / (24 * 60)
-  const progress = Math.round(dayPct * 100)
+  const userLevel  = profile?.level ?? 0
+  const dailyYield = YIELD_BY_LEVEL[Math.min(userLevel, YIELD_BY_LEVEL.length - 1)]
 
   useEffect(() => {
     if (!user) return
-    supabase.from('devices').select('*').eq('user_id', user.id).single()
+    supabase.from('devices').select('*').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => { if (data) setDevice(data) })
-    const claimed = hasClaimedToday(user.id)
+    supabase.from('orders').select('*').eq('user_id', user.id).eq('status', 'active').order('started_at', { ascending: false })
+      .then(({ data }) => { if (data) setOrders(data) })
+    const claimed = !isAdmin && hasClaimedToday(user.id)
     setClaimed(claimed)
     if (claimed) setCountdown(secondsUntilMidnightUTC())
-    loadActiveAccelerator()
   }, [user])
 
-  async function loadActiveAccelerator() {
-    if (!user) return
-    const { data } = await supabase
-      .from('orders')
-      .select('id, return_rate, started_at, created_at')
-      .eq('user_id', user.id)
-      .eq('task_type', 'accelerator')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (data) {
-      const refDate = data.started_at ?? data.created_at
-      const daysElapsed = (Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60 * 24)
-      if (daysElapsed >= 60) {
-        await supabase.from('orders').update({ status: 'expired' }).eq('id', data.id)
-        setActiveAcc(null)
-      } else {
-        setActiveAcc(data)
-      }
-    }
-  }
-
-  // Countdown tick
   useEffect(() => {
     if (!alreadyClaimed) return
     const t = setInterval(() => {
@@ -117,193 +81,203 @@ export default function Power() {
   }, [alreadyClaimed])
 
   async function handleClaimYield() {
-    if (!user || training || alreadyClaimed) return
+    if (!user) { setClaimError('Must be logged in.'); return }
+    if (training) return
+    if (alreadyClaimed && !isAdmin) { setClaimError('Already claimed today. Resets at midnight UTC.'); return }
+    setClaimError(''); setSuccess('')
     setTraining(true)
-
     const earned = parseFloat(dailyYield.toFixed(3))
-    const { data: fresh } = await supabase.from('assets').select('*').eq('user_id', user.id).single()
-    if (!fresh) { setTraining(false); return }
-
-    await supabase.from('assets').update({
+    let { data: fresh } = await supabase.from('assets').select('*').eq('user_id', user.id).maybeSingle()
+    if (!fresh) {
+      // Auto-create assets row if missing
+      const { data: created } = await supabase.from('assets').insert({
+        user_id: user.id, task_balance: 0, vault_balance: 0,
+        withdrawal_balance: 0, daily_yield: 0, total_yield: 0,
+      }).select().single()
+      fresh = created
+    }
+    if (!fresh) { setClaimError('Unable to load balance. Please refresh.'); setTraining(false); return }
+    const { error: updateErr } = await supabase.from('assets').update({
       daily_yield:        earned,
       total_yield:        parseFloat(((fresh.total_yield ?? 0) + earned).toFixed(3)),
       withdrawal_balance: parseFloat(((fresh.withdrawal_balance ?? 0) + earned).toFixed(3)),
     }).eq('user_id', user.id)
-
+    if (updateErr) { setClaimError('Failed to credit: ' + updateErr.message); setTraining(false); return }
     await supabase.from('transactions').insert({
-      user_id: user.id,
-      type:    'yield',
-      amount:  earned,
-      status:  'approved',
-      note:    activeAcc
-        ? `Daily accelerator yield (+$${earned.toFixed(2)})`
-        : `Daily node yield LV.${userLevel}`,
+      user_id: user.id, type: 'yield', amount: earned, status: 'approved',
+      note: `Daily node yield LV.${userLevel}`,
     })
-
     await refreshAssets()
     markClaimedToday(user.id)
     setClaimed(true)
     setCountdown(secondsUntilMidnightUTC())
     setTraining(false)
-    setSuccess(`+${earned.toFixed(3)} USDT credited to available balance!`)
+    setSuccess(`+${earned.toFixed(3)} USDT credited!`)
     setTimeout(() => setSuccess(''), 5000)
+    // Push notification for yield claim
+    await pushAndRecord(
+      user.id,
+      '✅ Daily Yield Claimed',
+      `+${earned.toFixed(3)} USDT credited to your withdrawal balance. LV.${userLevel} node.`,
+      'service',
+    )
   }
 
   return (
-    <Layout title="My Power" showBack={false}>
-      <div className="px-4 pt-4 pb-6 space-y-4">
+    <Layout showTopBar={false} showBack={false}>
+      {/* Custom header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
+            <span className="text-white font-extrabold text-xs">N</span>
+          </div>
+          <span className="text-white font-bold text-base">My Power</span>
+        </div>
+        <button onClick={() => navigate('/fundlogs')} className="w-9 h-9 flex items-center justify-center">
+          <span className="text-lg">📋</span>
+        </button>
+      </div>
 
-        {/* Stats */}
-        <div className="card">
-          <p className="section-title">Power Stats</p>
-          <div className="flex gap-3">
-            <div className="flex-1 bg-surface-muted rounded-2xl p-4 text-center border border-surface-border">
-              <p className="text-xs text-gray-500 mb-1">Daily Yield</p>
-              <p className="font-extrabold text-brand-400 text-xl">+{dailyYield.toFixed(3)}</p>
-              <p className="text-xs text-gray-600 mt-0.5">USDT/day</p>
+      <div className="pb-6">
+        {/* Stats bar - green gradient */}
+        <div className="mx-4 mt-4 rounded-2xl bg-gradient-to-r from-brand-900 via-green-900 to-emerald-800 p-4 border border-brand-500/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-brand-500/30 flex items-center justify-center">
+                <span className="text-brand-300 text-sm">📈</span>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs">Daily Yield</p>
+                <p className="text-brand-300 font-extrabold text-base">{assets?.daily_yield?.toFixed(3) ?? '0.000'} USDT</p>
+              </div>
             </div>
-            <div className="flex-1 bg-surface-muted rounded-2xl p-4 text-center border border-surface-border">
-              <p className="text-xs text-gray-500 mb-1">Total Yield</p>
-              <p className="font-extrabold text-brand-400 text-xl">{formatUSDT(assets?.total_yield ?? 0)}</p>
-              <p className="text-xs text-gray-600 mt-0.5">USDT</p>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-brand-500/30 flex items-center justify-center">
+                <span className="text-brand-300 text-sm">🔄</span>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs">Total Yield</p>
+                <p className="text-white font-extrabold text-base">{assets?.total_yield?.toFixed(3) ?? '0.000'} USDT</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Active Accelerator Banner */}
-        {activeAcc && (
-          <div className="card border-brand-500/30 bg-brand-500/5 fade-in">
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2">
-                <Rocket size={15} className="text-brand-400" />
-                <p className="text-sm font-bold text-brand-400">Active Accelerator</p>
-              </div>
-              <span className="text-xs text-gray-500">
-                {getDaysRemaining(activeAcc.started_at ?? activeAcc.created_at)} days left
-              </span>
-            </div>
-            <p className="text-xs text-gray-400">
-              Earning <span className="text-brand-400 font-bold">+${activeAcc.return_rate.toFixed(2)} USDT/day</span> via accelerator boost
-            </p>
-          </div>
-        )}
-
-        {/* Node card */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-5">
-            <p className="text-sm font-bold text-white">Personal Node</p>
-            <span className="text-xs text-brand-400 font-semibold bg-brand-500/10 border border-brand-500/20 px-2.5 py-0.5 rounded-full">
-              LV.{userLevel} Active
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4 mb-5">
-            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-green-950 to-brand-900 flex items-center justify-center glow-pulse shrink-0 border border-brand-500/20">
-              <Cpu size={28} className="text-brand-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-bold mb-0.5">{device?.model ?? 'Computing Node'}</p>
-              <p className="text-xs text-gray-500 mb-2">{device?.platform ?? 'NanoGPT Network'}</p>
-              <div className="flex items-center gap-1.5">
-                <Zap size={12} className="text-brand-400" />
-                <span className="text-xs text-brand-400 font-bold">Daily: +{dailyYield.toFixed(3)} USDT</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs text-gray-500">Training Progress (Today)</span>
-              <span className="text-xs text-brand-400 font-bold">{progress}%</span>
-            </div>
-            <div className="progress-bar"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
-            <p className="text-xs text-gray-600 mt-1.5">Resets daily at midnight UTC</p>
-          </div>
-
-          {/* Claim / cooldown */}
-          {alreadyClaimed ? (
-            <div className="space-y-3">
-              <div className="w-full py-3.5 rounded-2xl bg-surface-muted border border-surface-border flex items-center justify-center gap-2 text-sm font-bold text-gray-400">
-                <CheckCircle size={17} className="text-brand-400" />
-                Claimed Today
-              </div>
-              <p className="text-center text-xs text-gray-500">
-                Next claim in{' '}
-                <span className="text-brand-400 font-bold font-mono">{formatCountdown(countdown)}</span>
-              </p>
-            </div>
-          ) : (
-            <button
-              onClick={handleClaimYield}
-              disabled={training}
-              className="btn-primary shadow-brand disabled:opacity-60"
-            >
-              {training
-                ? <><Loader2 size={17} className="animate-spin" /> Claiming…</>
-                : <><Play size={17} /> Claim Daily Yield (+{dailyYield.toFixed(3)} USDT)</>}
-            </button>
-          )}
-
-          {success && (
-            <div className="mt-3 py-3 px-4 bg-brand-500/10 border border-brand-500/20 rounded-2xl text-center fade-in">
-              <p className="text-brand-400 text-sm font-bold">{success}</p>
-            </div>
-          )}
+        {/* Tabs */}
+        <div className="mx-4 mt-4 flex border-b border-surface-border">
+          <button
+            onClick={() => setActiveTab('personal')}
+            className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
+              activeTab === 'personal'
+                ? 'text-brand-400 border-b-2 border-brand-400'
+                : 'text-gray-500'
+            }`}
+          >
+            Personal device
+          </button>
+          <button
+            onClick={() => { setActiveTab('node'); navigate('/task') }}
+            className="flex-1 py-2.5 text-sm font-bold text-gray-500"
+          >
+            Node power
+          </button>
         </div>
 
-        {/* Accelerator CTA */}
-        <Link to="/accelerate" className="card flex items-center justify-between active:opacity-70 transition-opacity">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
-              <Rocket size={18} className="text-brand-400" />
+        {/* Personal device content */}
+        {activeTab === 'personal' && (
+          <div className="mx-4 mt-4 space-y-4">
+            {/* Device card */}
+            <div className="bg-surface-card border border-surface-border rounded-2xl divide-y divide-surface-border">
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-gray-400 text-sm">Model:</span>
+                <span className="text-white font-semibold text-sm">{device?.model ?? 'Computing Node'}</span>
+              </div>
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-gray-400 text-sm">Daily Yield</span>
+                <span className="text-white font-semibold text-sm">+{dailyYield.toFixed(3)} USDT</span>
+              </div>
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-gray-400 text-sm">Training Task Profit</span>
+                <button
+                  onClick={alreadyClaimed ? handleClaimYield : handleClaimYield}
+                  disabled={training}
+                  className="flex items-center gap-1"
+                >
+                  {training ? (
+                    <span className="flex items-center gap-1.5 bg-surface-muted border border-surface-border text-gray-400 text-xs font-bold px-3 py-1.5 rounded-lg">
+                      <Loader2 size={13} className="animate-spin" /> Claiming…
+                    </span>
+                  ) : alreadyClaimed ? (
+                    <span className="flex items-center gap-1.5 bg-surface-muted border border-surface-border text-gray-400 text-xs font-bold px-3 py-1.5 rounded-lg">
+                      <CheckCircle size={13} className="text-brand-400" />
+                      {formatCountdown(countdown)}
+                    </span>
+                  ) : (
+                    <span className="bg-brand-500 text-white text-xs font-bold px-4 py-1.5 rounded-lg">
+                      Start
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
+
+            {/* Feedback messages */}
+            {success && (
+              <div className="bg-brand-500/10 border border-brand-500/20 rounded-2xl px-4 py-3 text-center">
+                <p className="text-brand-400 text-sm font-bold">{success}</p>
+              </div>
+            )}
+            {claimError && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3">
+                <p className="text-red-400 text-sm">{claimError}</p>
+              </div>
+            )}
+
+            {/* Training tasks section */}
             <div>
-              <p className="text-white font-bold text-sm">Yield Accelerators</p>
-              <p className="text-gray-500 text-xs">Boost daily earnings up to $250/day</p>
-            </div>
-          </div>
-          <ChevronRight size={16} className="text-gray-600" />
-        </Link>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-white font-bold text-sm">Training tasks</p>
+                <button
+                  onClick={() => navigate('/task')}
+                  className="flex items-center gap-0.5 border border-brand-500/40 text-brand-400 text-xs font-semibold px-3 py-1.5 rounded-full"
+                >
+                  More profit <ChevronRight size={12} />
+                </button>
+              </div>
 
-        {/* Node info */}
-        {device && (
-          <div className="card">
-            <p className="section-title">Node Information</p>
-            <div className="space-y-3">
-              {[
-                { label: 'Device ID', value: device.device_id.slice(0, 16) + '…' },
-                { label: 'Model',     value: device.model },
-                { label: 'OS',        value: device.os },
-                { label: 'Network',   value: device.platform },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">{label}</span>
-                  <span className="text-xs text-white font-semibold font-mono">{value}</span>
+              {orders.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <img src="https://ai.neogpt.club/assets/movement-start.png" alt="No data" className="w-40 h-40 object-contain" />
+                  <p className="text-gray-500 text-sm">– No data –</p>
+                  <button
+                    onClick={() => navigate('/task')}
+                    className="px-8 py-2 rounded-full border border-surface-border text-gray-400 text-sm font-semibold"
+                  >
+                    Go now
+                  </button>
                 </div>
-              ))}
+              ) : (
+                <div className="space-y-3">
+                  {orders.map(order => (
+                    <div key={order.id} className="bg-surface-card border border-surface-border rounded-2xl px-4 py-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{getTypeEmoji(order.task_type)}</span>
+                          <p className="text-white font-semibold text-sm">{getPackageName(order.task_type, order.investment_amount, order.return_rate)}</p>
+                        </div>
+                        <span className="text-xs text-brand-400 font-semibold bg-brand-500/10 px-2 py-0.5 rounded-full">Active</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>Investment: {order.investment_amount} USDT</span>
+                        <span>Yield: {order.return_rate}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
-
-        {/* CTA to task center */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold text-white">Earn More</p>
-            <Link to="/my/orders" className="flex items-center gap-0.5 text-xs text-brand-400 font-bold">
-              History <ChevronRight size={12} />
-            </Link>
-          </div>
-          <div className="flex flex-col items-center justify-center py-4">
-            <div className="w-14 h-14 rounded-2xl bg-surface-muted border border-surface-border flex items-center justify-center mb-3">
-              <TrendingUp size={24} className="text-gray-600" />
-            </div>
-            <p className="text-gray-500 text-sm font-semibold">Boost earnings with AI tasks</p>
-            <p className="text-gray-600 text-xs mt-1">Up to 150% return on investments</p>
-          </div>
-          <Link to="/task" className="btn-secondary text-sm">Go to Task Center →</Link>
-        </div>
-
       </div>
     </Layout>
   )

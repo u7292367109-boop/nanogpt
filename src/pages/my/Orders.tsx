@@ -3,6 +3,7 @@ import { ShoppingBag, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-reac
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { getPackageName, getTypeEmoji } from '../../lib/packages'
 
 interface Order {
   id: string
@@ -25,26 +26,18 @@ interface Transaction {
 
 const STATUS_META: Record<string, { icon: typeof Clock; color: string; label: string }> = {
   pending:   { icon: Clock,         color: 'text-amber-400',  label: 'Pending' },
-  active:    { icon: RefreshCw,     color: 'text-blue-400',   label: 'Processing' },
+  active:    { icon: RefreshCw,     color: 'text-blue-400',   label: 'Active' },
   completed: { icon: CheckCircle,   color: 'text-brand-400',  label: 'Completed' },
   failed:    { icon: XCircle,       color: 'text-red-400',    label: 'Failed' },
 }
 
-const TYPE_EMOJI: Record<string, string> = {
-  text:        '📝',
-  tabular:     '📊',
-  picture:     '🖼️',
-  video:       '🎥',
-  accelerator: '🚀',
-}
-
 const TX_TYPE_LABEL: Record<string, string> = {
-  deposit:      '↓ Deposit',
-  withdrawal:   '↑ Withdrawal',
-  yield:        '⚡ Daily Yield',
-  task_profit:  '✅ Task Profit',
-  team_reward:  '👥 Team Reward',
-  accelerator:  '🚀 Accelerator Purchase',
+  deposit:     '↓ Deposit',
+  withdrawal:  '↑ Withdrawal',
+  yield:       '⚡ Daily Yield',
+  task_profit: '✅ Task Profit',
+  team_reward: '👥 Team Reward',
+  purchase:    '🛒 Task Purchase',
 }
 
 export default function Orders() {
@@ -98,9 +91,7 @@ export default function Orders() {
             <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : tab === 'orders' ? (
-          // Filter out accelerator orders — they're not tasks
-          (() => { const taskOrders = orders.filter(o => o.task_type !== 'accelerator'); return (
-          taskOrders.length === 0 ? (
+          orders.length === 0 ? (
             <div className="card text-center py-14 mt-2">
               <ShoppingBag size={40} className="text-gray-600 mx-auto mb-3" />
               <p className="text-gray-400 font-medium">No task orders yet</p>
@@ -108,7 +99,7 @@ export default function Orders() {
             </div>
           ) : (
             <div className="space-y-3 mt-2">
-              {taskOrders.map((order) => {
+              {orders.map((order) => {
                 const meta    = STATUS_META[order.status] ?? STATUS_META.pending
                 const Icon    = meta.icon
                 const profit  = parseFloat(((order.investment_amount * order.return_rate / 100) - order.investment_amount).toFixed(2))
@@ -119,10 +110,10 @@ export default function Orders() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-surface-muted border border-surface-border flex items-center justify-center text-xl">
-                          {TYPE_EMOJI[order.task_type] ?? '📋'}
+                          {getTypeEmoji(order.task_type)}
                         </div>
                         <div>
-                          <p className="text-white font-bold capitalize">{order.task_type} Task</p>
+                          <p className="text-white font-bold">{getPackageName(order.task_type, order.investment_amount, order.return_rate)}</p>
                           <p className="text-gray-500 text-xs">{new Date(order.created_at).toLocaleString()}</p>
                         </div>
                       </div>
@@ -164,7 +155,6 @@ export default function Orders() {
               })}
             </div>
           )
-          )})()
         ) : (
           transactions.length === 0 ? (
             <div className="card text-center py-14 mt-2">
@@ -181,7 +171,7 @@ export default function Orders() {
                     className={`flex items-center gap-3 px-4 py-3.5 ${i < transactions.length - 1 ? 'border-b border-surface-border' : ''}`}
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm ${positive ? 'bg-brand-500/10' : 'bg-red-500/10'}`}>
-                      {tx.type === 'deposit' ? '↓' : tx.type === 'withdrawal' ? '↑' : tx.type === 'yield' ? '⚡' : tx.type === 'task_profit' ? '✅' : tx.type === 'accelerator' ? '🚀' : '👥'}
+                      {tx.type === 'deposit' ? '↓' : tx.type === 'withdrawal' ? '↑' : tx.type === 'yield' ? '⚡' : tx.type === 'task_profit' ? '✅' : tx.type === 'purchase' ? '🛒' : '👥'}
                     </div>
                     <div className="flex-1">
                       <p className="text-white text-sm font-semibold">{TX_TYPE_LABEL[tx.type] ?? tx.type}</p>

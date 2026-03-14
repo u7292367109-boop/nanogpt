@@ -1,73 +1,53 @@
 import { useState, useEffect, useRef } from 'react'
 import { Copy, CheckCircle, ChevronLeft, Clock, AlertTriangle, Loader2 } from 'lucide-react'
-import { QRCodeSVG } from 'qrcode.react'
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { pushAndRecord } from '../../lib/notify'
 
 // ── Wallet addresses per network ─────────────────────────────────────────
+// Update WALLET_ADDRESS with the real Trust Wallet TRC-20 address
+const WALLET_ADDRESS = 'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE'
+
 const NETWORKS = [
   {
-    id:            'USDT-TRC20',
-    label:         'USDT',
-    sub:           'TRC-20 · TRON',
-    badge:         'Recommended',
-    icon:          '🟢',
-    minDeposit:    10,
-    fee:           'Free',
-    wallet:        'TMmXkT82RznZHbCHyJ4jmStDKHpy4ZfG7b',
+    id: 'USDT-TRC20',
+    label: 'USDT',
+    sub: 'TRC-20 · TRON',
+    badge: 'Recommended',
+    icon: '🟢',
+    minDeposit: 10,
+    fee: 'Free',
+    wallet: WALLET_ADDRESS,
     confirmations: '~1 min',
-    hint:          'In your wallet select: TRON network → USDT (TRC-20)',
   },
   {
-    id:            'USDT-BEP20',
-    label:         'USDT',
-    sub:           'BEP-20 · BSC',
-    badge:         '',
-    icon:          '🟡',
-    minDeposit:    10,
-    fee:           'Free',
-    wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
-    confirmations: '~1 min',
-    hint:          'In your wallet select: BNB Smart Chain → USDT (BEP-20)',
-  },
-  {
-    id:            'USDC-BEP20',
-    label:         'USDC',
-    sub:           'BEP-20 · BSC',
-    badge:         '',
-    icon:          '🔵',
-    minDeposit:    10,
-    fee:           'Free',
-    wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
-    confirmations: '~1 min',
-    hint:          'In your wallet select: BNB Smart Chain → USDC (BEP-20)',
-  },
-  {
-    id:            'USDC-ERC20',
-    label:         'USDC',
-    sub:           'ERC-20 · Ethereum',
-    badge:         '',
-    icon:          '🔷',
-    minDeposit:    50,
-    fee:           '~$5',
-    wallet:        '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
+    id: 'USDT-ERC20',
+    label: 'USDT',
+    sub: 'ERC-20 · Ethereum',
+    badge: '',
+    icon: '🔵',
+    minDeposit: 50,
+    fee: '~$5',
+    wallet: WALLET_ADDRESS,
     confirmations: '~3 min',
-    hint:          'In your wallet select: Ethereum network → USDC (ERC-20)',
+  },
+  {
+    id: 'USDT-BEP20',
+    label: 'USDT',
+    sub: 'BEP-20 · BSC',
+    badge: '',
+    icon: '🟡',
+    minDeposit: 10,
+    fee: 'Free',
+    wallet: WALLET_ADDRESS,
+    confirmations: '~1 min',
   },
 ]
 
 const PRESETS = [50, 100, 500, 1000]
 
-// QR code must encode ONLY the raw wallet address.
-// Prefixes like "ethereum:" or "tron:" make wallets send the NATIVE coin
-// (ETH / TRX) instead of the token (USDT / USDC).
-// Using a plain address is what Binance, OKX and all exchanges do —
-// the wallet recognises the address format and lets the user pick the token.
-function buildQrValue(network: typeof NETWORKS[0]): string {
-  return network.wallet
-}
-
+// Simple countdown timer
 function useCountdown(seconds: number) {
   const [remaining, setRemaining] = useState(seconds)
   const ref = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -92,8 +72,7 @@ function CheckoutStep({
   submitting: boolean
 }) {
   const [copied, setCopied] = useState(false)
-  const timer    = useCountdown(30 * 60)
-  const qrValue  = buildQrValue(network)
+  const timer = useCountdown(30 * 60) // 30-min window
 
   function copy() {
     navigator.clipboard.writeText(network.wallet)
@@ -104,12 +83,13 @@ function CheckoutStep({
   return (
     <div className="px-4 pt-3 pb-6 space-y-4">
 
+      {/* Back row */}
       <button onClick={onBack} className="flex items-center gap-1.5 text-gray-400 active:text-white transition-colors">
         <ChevronLeft size={18} />
         <span className="text-sm">Change network / amount</span>
       </button>
 
-      {/* Order summary */}
+      {/* Order card */}
       <div className="rounded-2xl bg-gradient-to-br from-brand-900/70 via-green-950/50 to-surface-card border border-brand-500/25 p-4">
         <div className="flex items-center justify-between mb-4">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Order Summary</p>
@@ -121,9 +101,7 @@ function CheckoutStep({
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-gray-500 text-xs">Amount to send</span>
-            <span className="text-brand-400 font-extrabold text-xl">
-              {amount} <span className="text-sm text-gray-400">{network.label}</span>
-            </span>
+            <span className="text-brand-400 font-extrabold text-xl">{amount} <span className="text-sm text-gray-400">USDT</span></span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-500 text-xs">Network</span>
@@ -140,43 +118,28 @@ function CheckoutStep({
         </div>
       </div>
 
-      {/* QR code + address */}
+      {/* QR + Address */}
       <div className="card text-center space-y-4">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-          Scan to send <span className="text-white">{amount} {network.label}</span>
+          Send exactly <span className="text-white">{amount} USDT</span> to this address
         </p>
 
-        {/* Real QR code */}
-        <div className="flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-3 shadow-[0_0_30px_rgba(0,210,106,0.2)]">
-            <QRCodeSVG
-              value={qrValue}
-              size={192}
-              bgColor="#ffffff"
-              fgColor="#111111"
-              level="M"
-              marginSize={0}
-            />
-          </div>
-        </div>
-
-        {/* Network hint — critical to avoid wrong-chain sends */}
-        <div className="mx-2 py-2 px-3 bg-amber-500/10 border border-amber-500/25 rounded-xl text-left">
-          <p className="text-amber-300 text-[10px] font-bold mb-0.5">⚠️ After scanning</p>
-          <p className="text-amber-200/80 text-[10px] leading-relaxed">{network.hint}</p>
+        {/* QR code — real encoding of wallet address */}
+        <div className="w-48 h-48 bg-white rounded-2xl mx-auto flex items-center justify-center p-2.5 shadow-[0_0_30px_rgba(0,210,106,0.15)]">
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=2&data=${encodeURIComponent(network.wallet)}`}
+            alt="Wallet address QR code"
+            className="w-full h-full object-contain rounded-xl"
+          />
         </div>
 
         {/* Address box */}
         <div className="bg-surface-muted rounded-xl px-4 py-3 flex items-start gap-3 text-left">
-          <p className="flex-1 text-xs text-gray-200 font-mono break-all leading-relaxed">
-            {network.wallet}
-          </p>
+          <p className="flex-1 text-xs text-gray-200 font-mono break-all leading-relaxed">{network.wallet}</p>
           <button
             onClick={copy}
             className={`shrink-0 p-2 rounded-lg transition-all ${
-              copied
-                ? 'bg-brand-500/20 text-brand-400'
-                : 'bg-surface-card text-gray-400 active:text-white'
+              copied ? 'bg-brand-500/20 text-brand-400' : 'bg-surface-card text-gray-400 active:text-white'
             }`}
           >
             {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
@@ -191,10 +154,10 @@ function CheckoutStep({
       <div className="card space-y-3">
         <p className="section-title mb-0">Steps to complete</p>
         {[
-          'Scan the QR code or copy the address below',
-          network.hint,
-          `Send exactly ${amount} ${network.label} — double-check token and network`,
-          'Return here and tap "I\'ve Completed Payment"',
+          'Copy the wallet address above',
+          `Open your wallet app and select ${network.sub.split('·')[1]?.trim()} network`,
+          `Send exactly ${amount} USDT to the address`,
+          'Return here and tap the button below',
         ].map((step, i) => (
           <div key={i} className="flex items-start gap-3">
             <div className="w-6 h-6 rounded-full bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-xs text-brand-400 font-bold shrink-0 mt-0.5">
@@ -205,6 +168,7 @@ function CheckoutStep({
         ))}
       </div>
 
+      {/* Confirm button */}
       <button
         onClick={onConfirm}
         disabled={submitting}
@@ -223,14 +187,14 @@ function CheckoutStep({
 
 export default function Deposit() {
   const { user, refreshAssets } = useAuth()
-  const [step, setStep]             = useState<1 | 2>(1)
+  const [step, setStep] = useState<1 | 2>(1)
   const [selectedNet, setSelectedNet] = useState('USDT-TRC20')
-  const [amount, setAmount]         = useState('')
+  const [amount, setAmount] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [done, setDone]             = useState(false)
+  const [done, setDone] = useState(false)
 
-  const network    = NETWORKS.find(n => n.id === selectedNet)!
-  const amt        = parseFloat(amount) || 0
+  const network = NETWORKS.find(n => n.id === selectedNet)!
+  const amt = parseFloat(amount) || 0
   const canProceed = amt >= network.minDeposit
 
   function handleProceed() {
@@ -243,17 +207,26 @@ export default function Deposit() {
     setSubmitting(true)
     await supabase.from('transactions').insert({
       user_id: user.id,
-      type:    'deposit',
-      amount:  amt,
-      status:  'pending',
-      note:    `${network.label} via ${network.sub}`,
+      type: 'deposit',
+      amount: amt,
+      status: 'pending',
     })
+    // Credit vault_balance immediately so user can start tasks
+    var fr = await supabase.from('assets').select('vault_balance').eq('user_id', user.id).maybeSingle()
+    if (fr.data) await supabase.from('assets').update({ vault_balance: parseFloat(((fr.data.vault_balance||0)+amt).toFixed(3)) }).eq('user_id', user.id)
     await refreshAssets()
+    // Push notification
+    await pushAndRecord(
+      user.id,
+      '💰 Deposit Submitted',
+      `Your deposit of ${amt.toFixed(2)} USDT is being processed.`,
+      'service',
+    )
     setSubmitting(false)
     setDone(true)
   }
 
-  // ── Done screen ───────────────────────────────────────────────────────────
+  // ── Done screen ──────────────────────────────────────────────────────────
   if (done) {
     return (
       <Layout title="Deposit" showBack showActions={false}>
@@ -265,8 +238,7 @@ export default function Deposit() {
             <div>
               <h3 className="text-white font-extrabold text-xl mb-1">Payment Submitted</h3>
               <p className="text-gray-400 text-sm">
-                Your deposit of{' '}
-                <span className="text-white font-bold">{amount} {network.label}</span> is being processed.
+                Your deposit of <span className="text-white font-bold">{amount} USDT</span> is being processed.
               </p>
             </div>
             <div className="bg-surface-muted rounded-2xl p-4 text-left space-y-2">
@@ -295,7 +267,7 @@ export default function Deposit() {
     )
   }
 
-  // ── Step 2: Checkout ──────────────────────────────────────────────────────
+  // ── Step 2: Checkout ─────────────────────────────────────────────────────
   if (step === 2) {
     return (
       <Layout title="Payment" showBack={false} showActions={false}>
@@ -322,7 +294,7 @@ export default function Deposit() {
             {NETWORKS.map(n => (
               <button
                 key={n.id}
-                onClick={() => { setSelectedNet(n.id); setAmount('') }}
+                onClick={() => setSelectedNet(n.id)}
                 className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all active:scale-[0.98] ${
                   selectedNet === n.id
                     ? 'bg-brand-500/10 border-brand-500/50 shadow-brand-sm'
@@ -368,9 +340,7 @@ export default function Deposit() {
                 onChange={e => setAmount(e.target.value)}
                 min={network.minDeposit}
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">
-                {network.label}
-              </span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">USDT</span>
             </div>
 
             {/* Quick presets */}
@@ -390,10 +360,11 @@ export default function Deposit() {
               ))}
             </div>
 
+            {/* Estimated credit */}
             {amt > 0 && (
               <div className="flex items-center justify-between pt-2 border-t border-surface-border">
                 <span className="text-xs text-gray-500">You will receive</span>
-                <span className="text-brand-400 font-extrabold">{amt.toFixed(2)} {network.label}</span>
+                <span className="text-brand-400 font-extrabold">{amt.toFixed(2)} USDT</span>
               </div>
             )}
           </div>
@@ -406,9 +377,9 @@ export default function Deposit() {
             <div>
               <p className="text-amber-300 text-xs font-bold mb-0.5">Important Notice</p>
               <p className="text-gray-400 text-xs leading-relaxed">
-                Only send <strong className="text-white">{network.label}</strong> via the{' '}
+                Only send <strong className="text-white">USDT</strong> via the{' '}
                 <strong className="text-white">{network.sub}</strong> network to avoid permanent loss.
-                Minimum deposit is <strong className="text-white">{network.minDeposit} {network.label}</strong>.
+                Minimum deposit is <strong className="text-white">{network.minDeposit} USDT</strong>.
               </p>
             </div>
           </div>

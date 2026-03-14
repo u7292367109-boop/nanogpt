@@ -4,6 +4,10 @@ import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { formatUSDT } from '../../lib/utils'
+import { pushAndRecord } from '../../lib/notify'
+
+const MIN_WITHDRAW = 10
+const FEE = 1
 
 const MIN_WITHDRAW = 10
 const FEE = 1
@@ -43,6 +47,13 @@ export default function Withdraw() {
     }).eq('user_id', user!.id)
 
     await refreshAssets()
+    // Push notification
+    await pushAndRecord(
+      user!.id,
+      '📤 Withdrawal Submitted',
+      `Your withdrawal of ${amt.toFixed(2)} USDT is being processed. You will receive ${net.toFixed(2)} USDT.`,
+      'service',
+    )
     setLoading(false)
     setSuccess(true)
   }

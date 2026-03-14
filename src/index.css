@@ -42,7 +42,11 @@
 
 @layer components {
   .page-container {
-    @apply h-full bg-surface flex flex-col overflow-hidden;
+    @apply h-full flex flex-col overflow-hidden;
+    background-color: #030806;
+    background-image: url('https://ai.neogpt.club/assets/cover-bebb3fc2.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
   }
 
   .card {
