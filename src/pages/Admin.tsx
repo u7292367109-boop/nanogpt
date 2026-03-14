@@ -389,8 +389,8 @@ function OrdersTab() {
 
   async function completeOrder(order: OrderRow) {
     setCompleting(order.id)
-    const total = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
-    const profit = parseFloat((total - order.investment_amount).toFixed(2))
+    const profit = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
+    const total  = parseFloat((order.investment_amount + profit).toFixed(2))
 
     const { data: assets } = await adminSupabase
       .from('assets').select('task_balance,withdrawal_balance').eq('user_id', order.user_id).maybeSingle()
@@ -441,8 +441,7 @@ function OrdersTab() {
 
       <div className="space-y-2">
         {filtered.map(o => {
-          const total  = parseFloat((o.investment_amount * o.return_rate / 100).toFixed(2))
-          const profit = parseFloat((total - o.investment_amount).toFixed(2))
+          const profit = parseFloat((o.investment_amount * o.return_rate / 100).toFixed(2))
           return (
             <div key={o.id} className="bg-surface-card border border-surface-border rounded-2xl p-4">
               <div className="flex items-start justify-between mb-2">

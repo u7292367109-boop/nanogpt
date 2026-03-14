@@ -36,7 +36,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18" />
               </svg>
             </div>
-            <span className="font-extrabold text-white text-2xl tracking-tight">NanoGPT</span>
+            <span className="font-extrabold text-white text-2xl tracking-tight">NeoGPT</span>
           </div>
 
           <h2 className="text-4xl xl:text-5xl font-extrabold text-white leading-[1.1] tracking-tight mb-5">

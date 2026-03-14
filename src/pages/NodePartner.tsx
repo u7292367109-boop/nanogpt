@@ -28,7 +28,7 @@ export default function NodePartner() {
         <div className="card">
           <p className="section-title">Vision & Mission</p>
           <p className="text-gray-300 text-sm leading-relaxed">
-            The AI age is reshaping our view of software and services. Compute resources and data training are emerging as core enablers of the AI sector. NanoGPT empowers people to engage with AI at scale and earn ongoing financial rewards from their participation.
+            The AI age is reshaping our view of software and services. Compute resources and data training are emerging as core enablers of the AI sector. NeoGPT empowers people to engage with AI at scale and earn ongoing financial rewards from their participation.
           </p>
         </div>
 
@@ -55,12 +55,12 @@ export default function NodePartner() {
           <p className="section-title">We Hope You Are</p>
           <div className="space-y-3">
             {[
-              'Aligned with NanoGPT\'s platform vision and values',
+              'Aligned with NeoGPT\'s platform vision and values',
               'Able to navigate platform operations and business models',
               'Informed about AI fundamentals and industry opportunities',
               'Diligent, trustworthy and dedicated',
               'Capable of planning and executing growth strategies',
-              'Ready to meet NanoGPT node partner goals',
+              'Ready to meet NeoGPT node partner goals',
             ].map((req) => (
               <div key={req} className="flex items-start gap-2">
                 <Star size={14} className="text-amber-400 flex-shrink-0 mt-0.5" />

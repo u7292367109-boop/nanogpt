@@ -305,9 +305,9 @@ export default function Power() {
                           <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden">
                             <div className="h-full rounded-full bg-brand-500" style={{ width: pct + '%' }} />
                           </div>
-                          <div className="flex justify-between text-[10px] text-gray-600">
-                            <span>Completes: {endDate.toLocaleDateString()}</span>
-                            <span className={daysLeft <= 5 ? 'text-amber-400 font-bold' : ''}>
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-gray-400">Completes: <span className="text-white font-semibold">{endDate.toLocaleDateString()}</span></span>
+                            <span className={daysLeft <= 5 ? 'text-amber-400 font-bold' : 'text-gray-400'}>
                               {daysLeft === 0 ? 'Completing soon…' : daysLeft + 'd left'}
                             </span>
                           </div>

@@ -81,8 +81,8 @@ export default function Orders() {
     const expired = fetchedOrders.filter(o => o.status === 'active' && getDaysRemaining(o) === 0)
     if (expired.length > 0) {
       await Promise.all(expired.map(async (order) => {
-        const total  = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
-        const profit = parseFloat((total - order.investment_amount).toFixed(2))
+        const profit = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
+        const total  = parseFloat((order.investment_amount + profit).toFixed(2))
         const { data: updated } = await supabase
           .from('orders')
           .update({ status: 'completed', completed_at: new Date().toISOString() })
@@ -145,8 +145,8 @@ export default function Orders() {
               {orders.map((order) => {
                 const meta        = STATUS_META[order.status] ?? STATUS_META.pending
                 const Icon        = meta.icon
-                const profit      = parseFloat(((order.investment_amount * order.return_rate / 100) - order.investment_amount).toFixed(2))
-                const total       = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
+                const profit      = parseFloat((order.investment_amount * order.return_rate / 100).toFixed(2))
+                const total       = parseFloat((order.investment_amount + profit).toFixed(2))
                 const endDate     = getEndDate(order)
                 const daysLeft    = getDaysRemaining(order)
                 const progressPct = order.status === 'active' ? getProgressPct(order) : (order.status === 'completed' ? 100 : 0)

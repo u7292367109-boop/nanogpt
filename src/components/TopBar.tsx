@@ -22,7 +22,7 @@ export default function TopBar({ title, showBack, showActions = true }: TopBarPr
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-brand-sm">
               <span className="text-white font-extrabold text-sm">N</span>
             </div>
-            <span className="font-extrabold text-white text-lg tracking-tight">NanoGPT</span>
+            <span className="font-extrabold text-white text-lg tracking-tight">NeoGPT</span>
           </Link>
         )}
       </div>

@@ -13,15 +13,15 @@ export default function Privacy() {
         {[
           {
             title: 'Terms & Conditions',
-            content: `Welcome to NanoGPT! By accessing or using our platform, you agree to be bound by these terms. NanoGPT provides a decentralized computing power platform that allows users to contribute idle device resources and earn rewards.`,
+            content: `Welcome to NeoGPT! By accessing or using our platform, you agree to be bound by these terms. NeoGPT provides a decentralized computing power platform that allows users to contribute idle device resources and earn rewards.`,
           },
           {
             title: '1. Acceptance of Terms',
-            content: `By creating an account or using NanoGPT services, you confirm that you are at least 18 years old and accept all terms outlined in this agreement.`,
+            content: `By creating an account or using NeoGPT services, you confirm that you are at least 18 years old and accept all terms outlined in this agreement.`,
           },
           {
             title: '2. Service Description',
-            content: `NanoGPT allows users to contribute idle computing power from their devices to the network. In exchange, users receive USDT rewards based on their level, participation, and task completion.`,
+            content: `NeoGPT allows users to contribute idle computing power from their devices to the network. In exchange, users receive USDT rewards based on their level, participation, and task completion.`,
           },
           {
             title: '3. User Accounts',
@@ -29,7 +29,7 @@ export default function Privacy() {
           },
           {
             title: '4. Earnings & Rewards',
-            content: `Earnings are determined by your account level, task type, and network participation. NanoGPT does not guarantee specific earnings. Returns may vary based on network conditions.`,
+            content: `Earnings are determined by your account level, task type, and network participation. NeoGPT does not guarantee specific earnings. Returns may vary based on network conditions.`,
           },
           {
             title: '5. Privacy Policy',
@@ -41,7 +41,7 @@ export default function Privacy() {
           },
           {
             title: '7. Limitation of Liability',
-            content: `NanoGPT is not liable for any indirect, incidental, or consequential damages arising from your use of the platform. Cryptocurrency values are volatile and past returns do not guarantee future results.`,
+            content: `NeoGPT is not liable for any indirect, incidental, or consequential damages arising from your use of the platform. Cryptocurrency values are volatile and past returns do not guarantee future results.`,
           },
         ].map(({ title, content }) => (
           <div key={title}>
@@ -51,7 +51,7 @@ export default function Privacy() {
         ))}
 
         <p className="text-xs text-gray-600 text-center pt-4">
-          Last updated: January 2026 · NanoGPT Corporation
+          Last updated: January 2026 · NeoGPT Corporation
         </p>
       </div>
     </div>
