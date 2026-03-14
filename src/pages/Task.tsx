@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Info, Plus } from 'lucide-react'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
+import { LEVEL_THRESHOLDS } from '../lib/packages'
 
-const LEVELS = ['LV.0', 'LV.1', 'LV.2', 'LV.3']
+const LEVELS = ['LV.0', 'LV.1', 'LV.2', 'LV.3', 'LV.4', 'LV.5', 'LV.6']
 
 export const TASK_CATEGORIES = [
   { id: 1, title: 'Text',    minReturn: 92,  maxReturn: 110, price: 50,   levelRange: 'LV.0-LV.6', minLevel: 0, tab: 'accelerator' },
@@ -14,16 +16,40 @@ export const TASK_CATEGORIES = [
 ]
 
 export default function Task() {
-  const { profile, assets } = useAuth()
+  const { user, profile, assets } = useAuth()
   const navigate = useNavigate()
   const vaultBalance = assets?.vault_balance ?? 0
   const [activeTab, setActiveTab] = useState<'accelerator' | 'supercomputing'>('accelerator')
+  const [totalInvested, setTotalInvested] = useState(0)
 
   const userLevel = profile?.level ?? 0
-  const visibleCategories = TASK_CATEGORIES.filter(c => c.tab === activeTab)
 
-  // Progress toward next level: if LV.0, need to buy 1 task to unlock LV.1
-  const progressLabel = userLevel === 0 ? 'Unlock General Computing Power' : `Reach LV.${userLevel + 1}`
+  // Fetch actual total invested from orders
+  useEffect(() => {
+    if (!user) return
+    supabase.from('orders').select('investment_amount').eq('user_id', user.id)
+      .then(({ data }) => {
+        const total = (data ?? []).reduce(
+          (sum, o) => sum + (parseFloat(String(o.investment_amount)) || 0), 0
+        )
+        setTotalInvested(total)
+      })
+  }, [user])
+
+  // Progress toward next level
+  const currentThreshold = LEVEL_THRESHOLDS[userLevel] ?? 0
+  const nextThreshold = userLevel < LEVEL_THRESHOLDS.length - 1
+    ? LEVEL_THRESHOLDS[userLevel + 1]
+    : LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1]
+  const progressPct = userLevel >= 6
+    ? 100
+    : Math.min(100, Math.round(((totalInvested - currentThreshold) / (nextThreshold - currentThreshold)) * 100))
+  const progressNeeded = Math.max(0, nextThreshold - totalInvested)
+  const progressLabel = userLevel >= 6
+    ? 'Max Level Reached'
+    : `${totalInvested.toFixed(0)} / ${nextThreshold} USDT to LV.${userLevel + 1}`
+
+  const visibleCategories = TASK_CATEGORIES.filter(c => c.tab === activeTab)
 
   return (
     <Layout showTopBar={false} showBack={false}>
@@ -39,7 +65,7 @@ export default function Task() {
           onClick={() => navigate('/my/orders')}
           className="flex items-center gap-1.5 bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-full"
         >
-          Rules
+          My Orders
         </button>
       </div>
 
@@ -61,20 +87,32 @@ export default function Task() {
 
         {/* Level card */}
         <div className="mx-4 mt-4 rounded-2xl bg-surface-card border border-surface-border p-4">
-          <div className="text-white font-extrabold text-4xl mb-4">LV.{userLevel}</div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-white font-extrabold text-4xl">LV.{userLevel}</div>
+            {userLevel < 6 && (
+              <div className="text-right">
+                <p className="text-gray-500 text-[10px]">Need {progressNeeded.toFixed(0)} more USDT</p>
+                <p className="text-gray-500 text-[10px]">to unlock LV.{userLevel + 1}</p>
+              </div>
+            )}
+          </div>
 
           {/* Progress bar */}
           <div className="mb-3">
             <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
-              <span>Progress &nbsp; {progressLabel}</span>
-              <span className="text-brand-400">0/1</span>
+              <span>Level Progress</span>
+              <span className="text-brand-400">{progressPct}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden">
-              <div className="h-full rounded-full bg-brand-500" style={{ width: '0%' }} />
+              <div
+                className="h-full rounded-full bg-brand-500 transition-all duration-700"
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
+            <p className="text-gray-600 text-[10px] mt-1">{progressLabel}</p>
           </div>
 
-          {/* Level dots */}
+          {/* Level dots — show all 7 levels */}
           <div className="relative flex items-center justify-between pt-3">
             <div className="absolute left-0 right-0 h-px bg-surface-border top-[18px]" />
             {LEVELS.map((lv, i) => (
@@ -84,7 +122,7 @@ export default function Task() {
                     ? 'bg-brand-400 border-brand-400'
                     : 'bg-surface-muted border-surface-border'
                 }`} />
-                <span className={`text-xs ${i <= userLevel ? 'text-brand-400 font-bold' : 'text-gray-600'}`}>
+                <span className={`text-[9px] ${i <= userLevel ? 'text-brand-400 font-bold' : 'text-gray-600'}`}>
                   {lv}
                 </span>
               </div>
@@ -136,6 +174,9 @@ export default function Task() {
                     <p className="text-xs text-gray-400">
                       Total return: <span className="text-brand-400 font-semibold">{returnLabel}</span>
                     </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      From: <span className="text-white font-semibold">{cat.price.toLocaleString()} USDT</span>
+                    </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <div className="flex items-center gap-1">
@@ -151,7 +192,7 @@ export default function Task() {
                           : 'bg-brand-500 hover:bg-brand-400 text-white'
                       }`}
                     >
-                      {locked ? `Requires LV.${cat.minLevel}` : `Open now\n(${cat.price} USDT)`}
+                      {locked ? `Requires LV.${cat.minLevel}` : 'Open now'}
                     </button>
                   </div>
                 </div>

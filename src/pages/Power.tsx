@@ -5,6 +5,7 @@ import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { pushAndRecord } from '../lib/notify'
+import { getPackageName, getTypeEmoji } from '../lib/packages'
 
 interface ActiveOrder {
   id: string
@@ -260,7 +261,10 @@ export default function Power() {
                   {orders.map(order => (
                     <div key={order.id} className="bg-surface-card border border-surface-border rounded-2xl px-4 py-3">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-white font-semibold text-sm capitalize">{order.task_type.replace('-', ' ')}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{getTypeEmoji(order.task_type)}</span>
+                          <p className="text-white font-semibold text-sm">{getPackageName(order.task_type, order.investment_amount, order.return_rate)}</p>
+                        </div>
                         <span className="text-xs text-brand-400 font-semibold bg-brand-500/10 px-2 py-0.5 rounded-full">Active</span>
                       </div>
                       <div className="flex items-center justify-between text-xs text-gray-500">

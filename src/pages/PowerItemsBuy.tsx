@@ -3,8 +3,9 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Loader2, CheckCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { PACKAGE_INFO, PID_TO_CATEGORY, calcLevel } from '../lib/packages'
 
-// All packages by ID
+// All packages by ID — now sourced from shared lib
 const ALL_PACKAGES: Record<string, {
   name: string; price: number; deadlines: number;
   dailyHours: number; totalYield: number; maxPurchase: number;
@@ -26,7 +27,7 @@ const ADMIN_EMAIL = 'affiliatesflow@gmail.com'
 export default function PowerItemsBuy() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user, assets, refreshAssets } = useAuth()
+  const { user, profile, assets, refreshAssets, refreshProfile } = useAuth()
   const isAdmin = user?.email === ADMIN_EMAIL
 
   const pid    = searchParams.get('pid') ?? 'text-1'
@@ -74,24 +75,55 @@ export default function PowerItemsBuy() {
       return
     }
 
-    // Create order record
-    await supabase.from('orders').insert({
+    // Create order record — use DB-allowed category name for task_type
+    // (DB has CHECK constraint: only 'text','tabular','picture','video' are allowed)
+    const taskCategory = PID_TO_CATEGORY[pid] ?? 'text'
+    const { error: orderErr } = await supabase.from('orders').insert({
       user_id:           user.id,
-      task_type:         pid,
+      task_type:         taskCategory,
       investment_amount: totalPrice,
       return_rate:       pkg.totalYield,
       status:            'active',
       started_at:        new Date().toISOString(),
     })
 
+    if (orderErr) {
+      // Roll back assets update if order creation failed
+      await supabase.from('assets').update({
+        vault_balance: parseFloat(((fresh.vault_balance ?? 0)).toFixed(2)),
+        task_balance:  parseFloat(((fresh.task_balance ?? 0)).toFixed(2)),
+      }).eq('user_id', user.id)
+      setError('Order creation failed: ' + orderErr.message + '. Your balance has been restored.')
+      setLoading(false)
+      setShowConfirm(false)
+      return
+    }
+
     // Create transaction record
-    await supabase.from('transactions').insert({
+    const { error: txErr } = await supabase.from('transactions').insert({
       user_id: user.id,
       type:    'purchase',
-      amount:  totalPrice,
+      amount:  -totalPrice,
       status:  'approved',
       note:    `Purchased ${qty}x ${pkg.name}`,
     })
+    if (txErr) console.warn('Transaction record failed (non-critical):', txErr.message)
+
+    // ── Level progression ──────────────────────────────────────────────────
+    // Calculate new level from total investment across all orders
+    const { data: allOrders } = await supabase
+      .from('orders')
+      .select('investment_amount')
+      .eq('user_id', user.id)
+    const totalInvested = (allOrders ?? []).reduce(
+      (sum, o) => sum + (parseFloat(String(o.investment_amount)) || 0), 0
+    )
+    const newLevel = calcLevel(totalInvested)
+    const currentLevel = profile?.level ?? 0
+    if (newLevel > currentLevel) {
+      await supabase.from('profiles').update({ level: newLevel }).eq('id', user.id)
+      await refreshProfile()
+    }
 
     await refreshAssets()
     setLoading(false)
