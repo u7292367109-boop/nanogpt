@@ -3,9 +3,8 @@ import { ShoppingBag, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-reac
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { getPackageName, getTypeEmoji } from '../../lib/packages'
-
-const DEADLINE_DAYS = 60
+import { getPackageName, getTypeEmoji, getDeadlineDays } from '../../lib/packages'
+import { useLang } from '../../context/LanguageContext'
 
 interface Order {
   id: string
@@ -45,7 +44,8 @@ const TX_TYPE_LABEL: Record<string, string> = {
 
 function getEndDate(order: Order): Date {
   const base = order.started_at ? new Date(order.started_at) : new Date(order.created_at)
-  return new Date(base.getTime() + DEADLINE_DAYS * 24 * 60 * 60 * 1000)
+  const days = getDeadlineDays(order.return_rate)
+  return new Date(base.getTime() + days * 24 * 60 * 60 * 1000)
 }
 
 function getDaysRemaining(order: Order): number {
@@ -55,12 +55,14 @@ function getDaysRemaining(order: Order): number {
 function getProgressPct(order: Order): number {
   const base = order.started_at ? new Date(order.started_at) : new Date(order.created_at)
   const elapsed = Date.now() - base.getTime()
-  const total = DEADLINE_DAYS * 24 * 60 * 60 * 1000
+  const days = getDeadlineDays(order.return_rate)
+  const total = days * 24 * 60 * 60 * 1000
   return Math.min(100, Math.round((elapsed / total) * 100))
 }
 
 export default function Orders() {
   const { user } = useAuth()
+  const { t } = useLang()
   const [tab, setTab]         = useState<'orders' | 'history'>('orders')
   const [orders, setOrders]   = useState<Order[]>([])
   const [transactions, setTx] = useState<Transaction[]>([])
@@ -98,7 +100,7 @@ export default function Orders() {
           }
           await supabase.from('transactions').insert({
             user_id: user.id, type: 'task_profit', amount: profit, status: 'approved',
-            note: `Task completed — ${order.task_type} node (60-day cycle)`,
+            note: `Task completed — ${order.task_type} node (${getDeadlineDays(order.return_rate)}-day cycle)`,
           })
         }
       }))
@@ -116,14 +118,14 @@ export default function Orders() {
   useEffect(() => { loadData() }, [loadData])
 
   return (
-    <Layout title="My Orders" showBack showActions={false}>
+    <Layout title={t('my_orders')} showBack showActions={false}>
       <div className="flex gap-2 px-4 pt-4 pb-2">
-        {(['orders', 'history'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)}
+        {(['orders', 'history'] as const).map(tabKey => (
+          <button key={tabKey} onClick={() => setTab(tabKey)}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              tab === t ? 'bg-brand-500 text-white' : 'bg-surface-muted text-gray-500 border border-surface-border'
+              tab === tabKey ? 'bg-brand-500 text-white' : 'bg-surface-muted text-gray-500 border border-surface-border'
             }`}>
-            {t === 'orders' ? '📋 Task Orders' : '📜 History'}
+            {tabKey === 'orders' ? `📋 ${t('task_orders')}` : `📜 ${t('history')}`}
           </button>
         ))}
       </div>
@@ -137,8 +139,8 @@ export default function Orders() {
           orders.length === 0 ? (
             <div className="card text-center py-14 mt-2">
               <ShoppingBag size={40} className="text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400 font-medium">No task orders yet</p>
-              <p className="text-gray-600 text-sm mt-1">Open a task in the Task Center to get started</p>
+              <p className="text-gray-400 font-medium">{t('no_orders')}</p>
+              <p className="text-gray-600 text-sm mt-1">{t('no_orders_hint')}</p>
             </div>
           ) : (
             <div className="space-y-3 mt-2">
@@ -171,17 +173,17 @@ export default function Orders() {
 
                     <div className="grid grid-cols-3 gap-2 pt-3 border-t border-surface-border">
                       <div className="text-center">
-                        <p className="text-[10px] text-gray-500 mb-0.5">Invested</p>
+                        <p className="text-[10px] text-gray-500 mb-0.5">{t('invested')}</p>
                         <p className="text-white font-bold text-sm">{Number(order.investment_amount).toFixed(2)}</p>
                         <p className="text-[10px] text-gray-600">USDT</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-[10px] text-gray-500 mb-0.5">Rate</p>
+                        <p className="text-[10px] text-gray-500 mb-0.5">{t('rate')}</p>
                         <p className="text-amber-400 font-bold text-sm">{Number(order.return_rate).toFixed(0)}%</p>
                       </div>
                       <div className="text-center">
                         <p className="text-[10px] text-gray-500 mb-0.5">
-                          {order.status === 'completed' ? 'Profit' : 'Expected'}
+                          {order.status === 'completed' ? t('profit') : t('expected')}
                         </p>
                         <p className={`font-bold text-sm ${order.status === 'completed' ? 'text-brand-400' : 'text-gray-400'}`}>
                           +{profit.toFixed(2)}
@@ -193,16 +195,16 @@ export default function Orders() {
                     {order.status === 'active' && (
                       <div className="mt-3 pt-3 border-t border-surface-border space-y-2">
                         <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-gray-500">{DEADLINE_DAYS}-day cycle progress</span>
+                          <span className="text-gray-500">{getDeadlineDays(order.return_rate)}-day cycle progress</span>
                           <span className="text-brand-400 font-bold">{progressPct}%</span>
                         </div>
                         <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden">
                           <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${progressPct}%` }} />
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-gray-500">
-                          <span>Completes: {endDate.toLocaleDateString()}</span>
+                          <span>{t('completes')} {endDate.toLocaleDateString()}</span>
                           <span className={daysLeft <= 5 ? 'text-amber-400 font-bold' : ''}>
-                            {daysLeft === 0 ? 'Completing…' : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left`}
+                            {daysLeft === 0 ? t('completing') : `${daysLeft}${t('days_left')}`}
                           </span>
                         </div>
                       </div>
@@ -211,7 +213,7 @@ export default function Orders() {
                     {order.status === 'completed' && (
                       <div className="mt-2 pt-2 border-t border-surface-border">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Total received</span>
+                          <span className="text-xs text-gray-500">{t('total_received')}</span>
                           <span className="text-brand-400 font-extrabold">{total.toFixed(2)} USDT</span>
                         </div>
                         {order.completed_at && (
@@ -230,7 +232,7 @@ export default function Orders() {
           transactions.length === 0 ? (
             <div className="card text-center py-14 mt-2">
               <ShoppingBag size={40} className="text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400 font-medium">No transactions yet</p>
+              <p className="text-gray-400 font-medium">{t('no_transactions')}</p>
             </div>
           ) : (
             <div className="card p-0 overflow-hidden mt-2">

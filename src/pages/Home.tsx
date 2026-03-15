@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import BottomNav from '../components/BottomNav'
 import { requestNotificationPermission } from '../lib/notify'
+import { useLang } from '../context/LanguageContext'
 
 const YIELD_BY_LEVEL = [0.014, 0.025, 0.045, 0.08, 0.15, 0.30, 0.60]
 
@@ -25,6 +26,7 @@ const PARTNERS = [
 export default function Home() {
   const { user, profile, assets } = useAuth()
   const navigate = useNavigate()
+  const { t } = useLang()
   const [announcement, setAnnouncement] = useState('Partner Announcement')
   const [nodeCount] = useState('2000K')
   const [deviceModel, setDeviceModel] = useState('Personal Node')
@@ -72,15 +74,15 @@ export default function Home() {
       >
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
-            <span className="text-white font-extrabold text-xs">N</span>
+            <span className="text-white font-extrabold text-xs">U</span>
           </div>
-          <span className="text-white font-bold text-base">Welcome To NeoGPT</span>
+          <span className="text-white font-bold text-base">{t('welcome')}</span>
         </div>
         <div className="flex items-center gap-1">
           <Link to="/lang" className="w-9 h-9 flex items-center justify-center text-gray-400">
             <Globe size={18} />
           </Link>
-          <a href="#" className="w-9 h-9 flex items-center justify-center text-gray-400">
+          <a href="https://t.me/ultragptsupport" target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center text-gray-400">
             <Headphones size={18} />
           </a>
           <button onClick={handleBellClick} className="w-9 h-9 flex items-center justify-center text-gray-400 relative">
@@ -105,24 +107,24 @@ export default function Home() {
 
         {/* Notice bar */}
         <div className="flex items-center gap-2 px-4 py-2 bg-surface-card/80 border-b border-surface-border overflow-hidden">
-          <span className="text-[10px] font-bold text-amber-400 bg-amber-400/20 px-2 py-0.5 rounded shrink-0">Notice</span>
+          <span className="text-[10px] font-bold text-amber-400 bg-amber-400/20 px-2 py-0.5 rounded shrink-0">{t('notice')}</span>
           <div className="flex-1 overflow-hidden">
             <div className="marquee-text text-xs text-gray-400">
               {announcement}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{announcement}
             </div>
           </div>
           <button onClick={() => navigate('/notifications')} className="shrink-0 text-xs text-gray-500 flex items-center gap-0.5">
-            Partner Announ <ChevronRight size={10} />
+            {t('notice')} <ChevronRight size={10} />
           </button>
         </div>
 
         {/* Quick links */}
         <div className="grid grid-cols-4 gap-0 px-0 mt-4 mx-4">
           {[
-            { to: '/task',        icon: '🖥️', label: 'Task Center'  },
-            { to: '/tutorials',   icon: '📚', label: 'Tutorials'    },
-            { to: '/my/share',    icon: '🤝', label: 'Invitation'   },
-            { to: '/my/about-us', icon: '👤', label: 'About us'     },
+            { to: '/task',        icon: '🖥️', label: t('task_center') },
+            { to: '/tutorials',   icon: '📚', label: t('tutorials')   },
+            { to: '/my/share',    icon: '🤝', label: t('invitation')  },
+            { to: '/my/about-us', icon: '👤', label: t('about_us')    },
           ].map(({ to, icon, label }) => (
             <Link
               key={to}
@@ -145,7 +147,7 @@ export default function Home() {
                 <span className="text-brand-300 text-sm">📈</span>
               </div>
               <div>
-                <p className="text-gray-400 text-xs">Daily yield</p>
+                <p className="text-gray-400 text-xs">{t('daily_yield')}</p>
                 <p className="text-brand-300 font-extrabold">+{dailyYield.toFixed(3)}USDT</p>
               </div>
             </div>
@@ -154,7 +156,7 @@ export default function Home() {
                 <span className="text-brand-300 text-sm">🔄</span>
               </div>
               <div>
-                <p className="text-gray-400 text-xs">Total yield</p>
+                <p className="text-gray-400 text-xs">{t('total_yield')}</p>
                 <p className="text-white font-extrabold">+{totalYield.toFixed(3)}USDT</p>
               </div>
             </div>
@@ -162,7 +164,7 @@ export default function Home() {
           {/* Progress bar */}
           <div>
             <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-              <span>Training progress</span>
+              <span>{t('training_progress')}</span>
               <span>{trainingProgress}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-black/30 overflow-hidden">
@@ -175,7 +177,7 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-3 mx-4 mt-3">
           {/* Make Profit */}
           <div className="bg-surface-card border border-surface-border rounded-2xl p-4">
-            <p className="text-white font-bold text-sm mb-3">Make Profit</p>
+            <p className="text-white font-bold text-sm mb-3">{t('make_profit')}</p>
             <div className="flex items-end justify-between">
               <div className="w-10 h-10 rounded-xl bg-brand-500/20 flex items-center justify-center">
                 <span className="text-xl">🪙</span>
@@ -186,21 +188,21 @@ export default function Home() {
                   {yieldRate.toFixed(3)}
                   <span className="text-gray-500 text-xs ml-1">USDT</span>
                 </p>
-                <Link to="/power" className="text-brand-400 text-xs font-bold">Claim &gt;</Link>
+                <Link to="/power" className="text-brand-400 text-xs font-bold">{t('claim')} &gt;</Link>
               </div>
             </div>
           </div>
 
           {/* Node Partner */}
           <div className="bg-surface-card border border-surface-border rounded-2xl p-4">
-            <p className="text-white font-bold text-sm mb-3">Node Partner</p>
+            <p className="text-white font-bold text-sm mb-3">{t('node_partner')}</p>
             <div className="flex items-end justify-between">
               <div className="w-10 h-10 rounded-xl bg-brand-500/20 flex items-center justify-center">
                 <span className="text-xl">📍</span>
               </div>
               <div className="text-right">
                 <p className="text-white font-extrabold text-base">{nodeCount}</p>
-                <Link to="/node-partner" className="text-brand-400 text-xs font-bold">Node partner &gt;</Link>
+                <Link to="/node-partner" className="text-brand-400 text-xs font-bold">{t('node_partner')} &gt;</Link>
               </div>
             </div>
           </div>
@@ -208,7 +210,7 @@ export default function Home() {
 
         {/* Partners section */}
         <div className="mx-4 mt-4">
-          <h3 className="text-white font-bold text-sm mb-3 border-b-2 border-brand-400 pb-1 inline-block">Partners</h3>
+          <h3 className="text-white font-bold text-sm mb-3 border-b-2 border-brand-400 pb-1 inline-block">{t('partners')}</h3>
           <div className="bg-gradient-to-b from-surface-card to-green-950/20 border border-surface-border rounded-2xl p-4">
             <div className="grid grid-cols-3 gap-y-4 gap-x-2">
               {PARTNERS.map((p) => (

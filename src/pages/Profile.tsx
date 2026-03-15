@@ -5,10 +5,12 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import BottomNav from '../components/BottomNav'
+import { useLang } from '../context/LanguageContext'
 
 export default function Profile() {
   const { profile, assets, signOut } = useAuth()
   const navigate = useNavigate()
+  const { t } = useLang()
 
   async function handleSignOut() {
     await signOut()
@@ -18,16 +20,16 @@ export default function Profile() {
   const totalAssets = (assets?.task_balance ?? 0) + (assets?.vault_balance ?? 0) + (assets?.withdrawal_balance ?? 0)
 
   const menuItems = [
-    { icon: Smartphone, label: 'My Device',       to: '/my/device'                  },
-    { icon: Users,      label: 'My Team',          to: '/my/team'                    },
-    { icon: ShoppingBag,label: 'My Orders',        to: '/my/orders'                  },
-    { icon: Share2,     label: 'Share',            to: '/my/share'                   },
-    { icon: Shield,     label: 'KYC',              to: '/my/kyc'                     },
-    { icon: Headphones, label: 'Customer Service', to: 'https://t.me/nanogptsupport' },
-    { icon: Layers,     label: 'Task Center',      to: '/task'                       },
-    { icon: Cpu,        label: 'Computing Pool',   to: '/power'                      },
-    { icon: Globe,      label: 'Language',         to: '/lang'                       },
-    { icon: Info,       label: 'About Us',         to: '/my/about-us'                },
+    { icon: Smartphone, label: t('my_device'),        to: '/my/device'                  },
+    { icon: Users,      label: t('my_team'),           to: '/my/team'                    },
+    { icon: ShoppingBag,label: t('my_orders'),         to: '/my/orders'                  },
+    { icon: Share2,     label: t('share'),             to: '/my/share'                   },
+    { icon: Shield,     label: t('kyc'),               to: '/my/kyc'                     },
+    { icon: Headphones, label: t('customer_service'),  to: 'https://t.me/ultragptsupport' },
+    { icon: Layers,     label: t('task_center'),       to: '/task'                       },
+    { icon: Cpu,        label: t('computing_pool'),    to: '/power'                      },
+    { icon: Globe,      label: t('language'),          to: '/lang'                       },
+    { icon: Info,       label: t('about_us'),          to: '/my/about-us'                },
   ]
 
   return (
@@ -59,21 +61,21 @@ export default function Profile() {
         <div className="px-4 pt-4">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <p className="text-gray-400 text-xs mb-1">My total assets</p>
+              <p className="text-gray-400 text-xs mb-1">{t('total_assets')}</p>
               <p className="text-white font-extrabold text-3xl">
                 {totalAssets.toFixed(3)}
                 <span className="text-gray-500 text-base font-normal ml-1.5">USDT</span>
               </p>
             </div>
             <Link to="/fundlogs" className="bg-brand-500 text-white text-xs font-bold px-4 py-2 rounded-full">
-              Asset Center
+              {t('asset_center')}
             </Link>
           </div>
           <div className="grid grid-cols-3 gap-2 mt-3">
             {[
-              { label: 'Task',       sub: 'Active orders',    value: (assets?.task_balance ?? 0).toFixed(3),       to: '/my/orders'   },
-              { label: 'Vault',      sub: 'Buy task packages',value: (assets?.vault_balance ?? 0).toFixed(3),       to: '/task'        },
-              { label: 'Withdrawal', sub: 'Withdraw earnings', value: (assets?.withdrawal_balance ?? 0).toFixed(3), to: '/my/withdraw' },
+              { label: t('task_balance'),   sub: t('active_orders'),   value: (assets?.task_balance ?? 0).toFixed(3),       to: '/my/orders'   },
+              { label: t('vault_balance'),  sub: t('buy_packages'),    value: (assets?.vault_balance ?? 0).toFixed(3),       to: '/task'        },
+              { label: t('withdrawal_bal'), sub: t('withdraw_earnings'),value: (assets?.withdrawal_balance ?? 0).toFixed(3), to: '/my/withdraw' },
             ].map(({ label, sub, value, to }) => (
               <Link key={label} to={to} className="bg-surface-card border border-surface-border rounded-xl p-3 text-center active:opacity-70">
                 <div className="flex items-center justify-center gap-1 mb-1">
@@ -115,7 +117,7 @@ export default function Profile() {
                   className="w-full flex items-center justify-between px-4 py-3.5 active:bg-surface-muted transition-colors">
             <div className="flex items-center gap-3">
               <LogOut size={17} className="text-gray-400" />
-              <span className="text-white text-sm font-medium">Logout</span>
+              <span className="text-white text-sm font-medium">{t('logout')}</span>
             </div>
             <ChevronRight size={15} className="text-gray-600" />
           </button>

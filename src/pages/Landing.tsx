@@ -14,7 +14,7 @@ export default function Landing() {
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-brand-sm">
             <Cpu size={18} className="text-white" />
           </div>
-          <span className="font-extrabold text-white text-xl tracking-tight">NeoGPT</span>
+          <span className="font-extrabold text-white text-xl tracking-tight">UltraGPT</span>
         </div>
         <Link to="/login" className="text-xs font-bold text-brand-400 px-3 py-1.5 rounded-full border border-brand-500/30 bg-brand-500/10">
           Sign In
@@ -44,7 +44,7 @@ export default function Landing() {
           {[
             { value: '2.8M+', label: 'Active Nodes' },
             { value: '$12M+', label: 'Paid Out' },
-            { value: '150%', label: 'Max Return' },
+            { value: '200%', label: 'Max Return' },
           ].map(({ value, label }) => (
             <div key={label} className="flex-1 bg-surface-card rounded-2xl p-3 text-center border border-surface-border">
               <p className="text-brand-400 font-extrabold text-base leading-none">{value}</p>

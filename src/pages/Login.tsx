@@ -32,7 +32,7 @@ export default function Login() {
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-brand-sm">
           <Cpu size={17} className="text-white" />
         </div>
-        <span className="font-extrabold text-white text-xl tracking-tight">NeoGPT</span>
+        <span className="font-extrabold text-white text-xl tracking-tight">UltraGPT</span>
       </div>
 
       <div className="relative mt-8 mb-8">

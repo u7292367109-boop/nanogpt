@@ -12,7 +12,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 
 /** Show a native browser push notification (foreground + background).
  *  Silently skips if permission is not granted. */
-export function showPushNotification(title: string, body: string, icon = '/vite.svg') {
+export function showPushNotification(title: string, body: string, icon = '/logo.svg') {
   if (!('Notification' in window)) return
   if (Notification.permission !== 'granted') return
   try {

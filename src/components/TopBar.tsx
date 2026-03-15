@@ -20,9 +20,9 @@ export default function TopBar({ title, showBack, showActions = true }: TopBarPr
         ) : (
           <Link to="/home" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-brand-sm">
-              <span className="text-white font-extrabold text-sm">N</span>
+              <span className="text-white font-extrabold text-sm">U</span>
             </div>
-            <span className="font-extrabold text-white text-lg tracking-tight">NeoGPT</span>
+            <span className="font-extrabold text-white text-lg tracking-tight">UltraGPT</span>
           </Link>
         )}
       </div>
@@ -32,7 +32,7 @@ export default function TopBar({ title, showBack, showActions = true }: TopBarPr
           <Link to="/lang" className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white active:bg-surface-muted transition-colors">
             <Globe size={18} />
           </Link>
-          <a href="#" className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white active:bg-surface-muted transition-colors">
+          <a href="https://t.me/ultragptsupport" target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white active:bg-surface-muted transition-colors">
             <Headphones size={18} />
           </a>
           <Link to="/notifications" className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:text-white active:bg-surface-muted transition-colors relative">

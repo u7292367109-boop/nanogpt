@@ -5,19 +5,21 @@ import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { LEVEL_THRESHOLDS } from '../lib/packages'
+import { useLang } from '../context/LanguageContext'
 
 const LEVELS = ['LV.0', 'LV.1', 'LV.2', 'LV.3', 'LV.4', 'LV.5', 'LV.6']
 
 export const TASK_CATEGORIES = [
-  { id: 1, title: 'Text',    minReturn: 92,  maxReturn: 110, price: 50,   levelRange: 'LV.0-LV.6', minLevel: 0, tab: 'accelerator' },
-  { id: 2, title: 'Tabular', minReturn: 120, maxReturn: 130, price: 600,  levelRange: 'LV.3-LV.6', minLevel: 3, tab: 'accelerator' },
-  { id: 3, title: 'Picture', minReturn: 140, maxReturn: 140, price: 3000, levelRange: 'LV.5-LV.6', minLevel: 5, tab: 'accelerator' },
-  { id: 4, title: 'Video',   minReturn: 150, maxReturn: 150, price: 6000, levelRange: 'LV.6',       minLevel: 6, tab: 'supercomputing' },
+  { id: 1, title: 'Text',    minReturn: 15,  maxReturn: 25,  price: 50,   duration: '7D',  levelRange: 'LV.0-LV.6', minLevel: 0, tab: 'accelerator'    },
+  { id: 2, title: 'Tabular', minReturn: 50,  maxReturn: 70,  price: 500,  duration: '14D', levelRange: 'LV.3-LV.6', minLevel: 3, tab: 'accelerator'    },
+  { id: 3, title: 'Picture', minReturn: 100, maxReturn: 130, price: 3000, duration: '30D', levelRange: 'LV.5-LV.6', minLevel: 5, tab: 'accelerator'    },
+  { id: 4, title: 'Video',   minReturn: 150, maxReturn: 200, price: 6000, duration: '60D', levelRange: 'LV.6',       minLevel: 6, tab: 'supercomputing' },
 ]
 
 export default function Task() {
   const { user, profile, assets } = useAuth()
   const navigate = useNavigate()
+  const { t } = useLang()
   const vaultBalance = assets?.vault_balance ?? 0
   const [activeTab, setActiveTab] = useState<'accelerator' | 'supercomputing'>('accelerator')
   const [totalInvested, setTotalInvested] = useState(0)
@@ -46,7 +48,7 @@ export default function Task() {
     : Math.min(100, Math.round(((totalInvested - currentThreshold) / (nextThreshold - currentThreshold)) * 100))
   const progressNeeded = Math.max(0, nextThreshold - totalInvested)
   const progressLabel = userLevel >= 6
-    ? 'Max Level Reached'
+    ? t('max_level')
     : `${totalInvested.toFixed(0)} / ${nextThreshold} USDT to LV.${userLevel + 1}`
 
   const visibleCategories = TASK_CATEGORIES.filter(c => c.tab === activeTab)
@@ -59,13 +61,13 @@ export default function Task() {
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
             <span className="text-white font-extrabold text-xs">N</span>
           </div>
-          <span className="text-white font-bold text-base">Numerical Center</span>
+          <span className="text-white font-bold text-base">{t('task_center')}</span>
         </div>
         <button
           onClick={() => navigate('/my/orders')}
           className="flex items-center gap-1.5 bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-full"
         >
-          My Orders
+          {t('my_orders')}
         </button>
       </div>
 
@@ -73,15 +75,15 @@ export default function Task() {
         {/* Vault balance bar */}
         <div className="mx-4 mt-4 flex items-center justify-between bg-surface-card border border-surface-border rounded-2xl px-4 py-3">
           <div>
-            <p className="text-gray-400 text-xs">Vault Balance</p>
+            <p className="text-gray-400 text-xs">{t('vault_balance')}</p>
             <p className="text-white font-extrabold text-base">{vaultBalance.toFixed(3)} <span className="text-gray-500 text-xs font-normal">USDT</span></p>
-            <p className="text-gray-600 text-[10px] mt-0.5">Used to purchase task packages below</p>
+            <p className="text-gray-600 text-[10px] mt-0.5">{t('vault_balance_hint')}</p>
           </div>
           <button
             onClick={() => navigate('/my/deposit')}
             className="flex items-center gap-1.5 bg-brand-500 text-white text-xs font-bold px-3 py-2 rounded-xl"
           >
-            <Plus size={13} /> Deposit
+            <Plus size={13} /> {t('deposit')}
           </button>
         </div>
 
@@ -100,7 +102,7 @@ export default function Task() {
           {/* Progress bar */}
           <div className="mb-3">
             <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
-              <span>Level Progress</span>
+              <span>{t('level_progress')}</span>
               <span className="text-brand-400">{progressPct}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden">
@@ -140,7 +142,7 @@ export default function Task() {
                 : 'text-gray-500'
             }`}
           >
-            Accelerator
+            {t('accelerator')}
           </button>
           <button
             onClick={() => setActiveTab('supercomputing')}
@@ -150,7 +152,7 @@ export default function Task() {
                 : 'text-gray-500'
             }`}
           >
-            SuperComputing
+            {t('supercomputing')}
           </button>
         </div>
 
@@ -158,24 +160,27 @@ export default function Task() {
         <div className="mx-4 mt-4 space-y-3">
           {visibleCategories.length === 0 && (
             <div className="text-center py-10 text-gray-500 text-sm">
-              No tasks available in this category.
+              {t('no_tasks')}
             </div>
           )}
           {visibleCategories.map((cat) => {
             const returnLabel = cat.minReturn === cat.maxReturn
-              ? `${cat.minReturn}.00%`
-              : `${cat.minReturn}.00%-${cat.maxReturn}.00%`
+              ? `${cat.minReturn}%`
+              : `${cat.minReturn}%–${cat.maxReturn}%`
             const locked = userLevel < cat.minLevel
             return (
               <div key={cat.id} className={`bg-surface-card border border-surface-border rounded-2xl p-4 ${locked ? 'opacity-60' : ''}`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white font-semibold text-sm mb-1">Type of task: {cat.title}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-white font-semibold text-sm">{t('task_type_label')} {cat.title}</p>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-brand-500/20 text-brand-400 border border-brand-500/30">{cat.duration}</span>
+                    </div>
                     <p className="text-xs text-gray-400">
-                      Total return: <span className="text-brand-400 font-semibold">{returnLabel}</span>
+                      {t('total_return')} <span className="text-brand-400 font-bold">{returnLabel}</span>
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      From: <span className="text-white font-semibold">{cat.price.toLocaleString()} USDT</span>
+                      {t('from_label')} <span className="text-white font-semibold">{cat.price.toLocaleString()} USDT</span>
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -192,7 +197,7 @@ export default function Task() {
                           : 'bg-brand-500 hover:bg-brand-400 text-white'
                       }`}
                     >
-                      {locked ? `Requires LV.${cat.minLevel}` : 'Open now'}
+                      {locked ? `Requires LV.${cat.minLevel}` : t('open_now')}
                     </button>
                   </div>
                 </div>

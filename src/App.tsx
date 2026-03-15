@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './context/LanguageContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -38,13 +38,26 @@ import FundLogs from './pages/FundLogs'
 // Admin
 import Admin from './pages/Admin'
 
-function App() {
+/** Layout route: wraps child routes inside the AppShell phone frame */
+function AppShellLayout() {
   return (
     <AppShell>
-      <AuthProvider>
-        <LanguageProvider>
-          <BrowserRouter>
-            <Routes>
+      <Outlet />
+    </AppShell>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <LanguageProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* ── Admin — full-screen, NO phone frame ── */}
+            <Route path="/admin" element={<Admin />} />
+
+            {/* ── All other routes — inside AppShell phone frame ── */}
+            <Route element={<AppShellLayout />}>
               {/* Public */}
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
@@ -52,43 +65,40 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/privacy" element={<Privacy />} />
 
-              {/* Admin — protected by email check inside Admin.tsx */}
-              <Route path="/admin" element={<Admin />} />
-
               {/* Protected */}
-              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-              <Route path="/power" element={<ProtectedRoute><Power /></ProtectedRoute>} />
-              <Route path="/task" element={<ProtectedRoute><Task /></ProtectedRoute>} />
-              <Route path="/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/home"          element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/power"         element={<ProtectedRoute><Power /></ProtectedRoute>} />
+              <Route path="/task"          element={<ProtectedRoute><Task /></ProtectedRoute>} />
+              <Route path="/ai"            element={<ProtectedRoute><AI /></ProtectedRoute>} />
+              <Route path="/profile"       element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-              <Route path="/node-partner" element={<ProtectedRoute><NodePartner /></ProtectedRoute>} />
-              <Route path="/tutorials" element={<ProtectedRoute><Tutorials /></ProtectedRoute>} />
-              <Route path="/lang" element={<ProtectedRoute><Language /></ProtectedRoute>} />
+              <Route path="/node-partner"  element={<ProtectedRoute><NodePartner /></ProtectedRoute>} />
+              <Route path="/tutorials"     element={<ProtectedRoute><Tutorials /></ProtectedRoute>} />
+              <Route path="/lang"          element={<ProtectedRoute><Language /></ProtectedRoute>} />
 
               {/* My pages */}
-              <Route path="/my/device" element={<ProtectedRoute><Device /></ProtectedRoute>} />
-              <Route path="/my/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
-              <Route path="/my/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-              <Route path="/my/share" element={<ProtectedRoute><Share /></ProtectedRoute>} />
-              <Route path="/my/kyc" element={<ProtectedRoute><KYC /></ProtectedRoute>} />
-              <Route path="/my/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
-              <Route path="/my/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
-              <Route path="/my/about-us" element={<ProtectedRoute><AboutUs /></ProtectedRoute>} />
+              <Route path="/my/device"    element={<ProtectedRoute><Device /></ProtectedRoute>} />
+              <Route path="/my/team"      element={<ProtectedRoute><Team /></ProtectedRoute>} />
+              <Route path="/my/orders"    element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+              <Route path="/my/share"     element={<ProtectedRoute><Share /></ProtectedRoute>} />
+              <Route path="/my/kyc"       element={<ProtectedRoute><KYC /></ProtectedRoute>} />
+              <Route path="/my/deposit"   element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
+              <Route path="/my/withdraw"  element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
+              <Route path="/my/about-us"  element={<ProtectedRoute><AboutUs /></ProtectedRoute>} />
+              <Route path="/my/index"     element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
               {/* New pages */}
-              <Route path="/poweritems" element={<ProtectedRoute><PowerItems /></ProtectedRoute>} />
-              <Route path="/poweritems/buy" element={<ProtectedRoute><PowerItemsBuy /></ProtectedRoute>} />
-              <Route path="/fundlogs" element={<ProtectedRoute><FundLogs /></ProtectedRoute>} />
-              <Route path="/my/index" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/poweritems"      element={<ProtectedRoute><PowerItems /></ProtectedRoute>} />
+              <Route path="/poweritems/buy"  element={<ProtectedRoute><PowerItemsBuy /></ProtectedRoute>} />
+              <Route path="/fundlogs"        element={<ProtectedRoute><FundLogs /></ProtectedRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </LanguageProvider>
-      </AuthProvider>
-    </AppShell>
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </LanguageProvider>
+    </AuthProvider>
   )
 }
 

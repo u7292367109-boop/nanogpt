@@ -10,7 +10,7 @@ export default function AboutUs() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center mx-auto mb-4">
             <Cpu size={28} className="text-white" />
           </div>
-          <h2 className="text-white font-bold text-2xl mb-1">NeoGPT</h2>
+          <h2 className="text-white font-bold text-2xl mb-1">UltraGPT</h2>
           <p className="text-brand-300 text-sm">Decentralized Computing Power Revenue Platform</p>
         </div>
 
@@ -18,13 +18,13 @@ export default function AboutUs() {
         <div className="card">
           <p className="section-title">Our Story</p>
           <p className="text-gray-300 text-sm leading-relaxed">
-            By 2026, AI had reshaped industries — yet the computing power behind it stayed concentrated in few hands. NeoGPT was formed to change that.
+            By 2026, AI had reshaped industries — yet the computing power behind it stayed concentrated in few hands. UltraGPT was formed to change that.
           </p>
           <p className="text-gray-300 text-sm leading-relaxed mt-3">
             A team of engineers and innovators came together to democratize AI infrastructure: letting anyone contribute idle compute and earn from the global demand for training capacity.
           </p>
           <p className="text-gray-300 text-sm leading-relaxed mt-3">
-            Today, NeoGPT aggregates decentralized compute from individuals and providers worldwide, delivering it to enterprises and AI labs at scale.
+            Today, UltraGPT aggregates decentralized compute from individuals and providers worldwide, delivering it to enterprises and AI labs at scale.
           </p>
         </div>
 
@@ -56,17 +56,17 @@ export default function AboutUs() {
           <div className="space-y-2">
             <div className="flex items-center justify-between py-2">
               <span className="text-gray-400 text-sm">Email</span>
-              <span className="text-brand-400 text-sm">support@nanogpt.ai</span>
+              <span className="text-brand-400 text-sm">support@ultragpt.ai</span>
             </div>
             <div className="flex items-center justify-between py-2 border-t border-surface-border">
               <span className="text-gray-400 text-sm">Telegram</span>
-              <span className="text-brand-400 text-sm">@NeoGPT_Support</span>
+              <span className="text-brand-400 text-sm">@UltraGPT_Support</span>
             </div>
           </div>
         </div>
 
         <p className="text-center text-xs text-gray-600">
-          © 2026 NeoGPT. All rights reserved.
+          © 2026 UltraGPT. All rights reserved.
         </p>
       </div>
     </Layout>

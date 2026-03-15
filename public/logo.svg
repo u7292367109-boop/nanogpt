@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0d1130"/>
+  <defs>
+    <linearGradient id="gr" x1="5%" y1="5%" x2="95%" y2="95%">
+      <stop offset="0%" stop-color="#7de840"/>
+      <stop offset="45%" stop-color="#38c412"/>
+      <stop offset="100%" stop-color="#14950a"/>
+    </linearGradient>
+  </defs>
+  <!-- Left O: full circle -->
+  <circle cx="165" cy="256" r="90" fill="none" stroke="url(#gr)" stroke-width="48"/>
+  <!-- Upper crossover bridge between O and G -->
+  <path d="M 243,211 C 243,280 269,280 269,211" fill="none" stroke="url(#gr)" stroke-width="48" stroke-linecap="round"/>
+  <!-- Lower crossover bridge between O and G -->
+  <path d="M 243,301 C 243,232 269,232 269,301" fill="none" stroke="url(#gr)" stroke-width="48" stroke-linecap="round"/>
+  <!-- Right G: large arc (more than 270°), stops at upper-right opening, then arm inward -->
+  <path d="M 404,188 A 90,90 0 1,1 437,256 L 347,256" fill="none" stroke="url(#gr)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Dot at G opening -->
+  <circle cx="404" cy="188" r="22" fill="url(#gr)"/>
+</svg>

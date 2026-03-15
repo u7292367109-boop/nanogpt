@@ -3,24 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Loader2, CheckCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { PID_TO_CATEGORY, calcLevel } from '../lib/packages'
-
-// All packages by ID — now sourced from shared lib
-const ALL_PACKAGES: Record<string, {
-  name: string; price: number; deadlines: number;
-  dailyHours: number; totalYield: number; maxPurchase: number;
-  totalEarnings: number; dailyEarnings: number;
-}> = {
-  'text-1': { name: 'General Computing Power', price: 50,   deadlines: 60, dailyHours: 2, totalYield: 92,  maxPurchase: 2, totalEarnings: 96.00,   dailyEarnings: 1.60  },
-  'text-2': { name: 'Accelerator I',            price: 100,  deadlines: 60, dailyHours: 2, totalYield: 104, maxPurchase: 2, totalEarnings: 204.00,  dailyEarnings: 3.40  },
-  'text-3': { name: 'Accelerator II',           price: 200,  deadlines: 60, dailyHours: 2, totalYield: 110, maxPurchase: 2, totalEarnings: 420.00,  dailyEarnings: 7.00  },
-  'tab-1':  { name: 'Tabular Node I',           price: 600,  deadlines: 60, dailyHours: 2, totalYield: 120, maxPurchase: 2, totalEarnings: 720.00,  dailyEarnings: 12.00 },
-  'tab-2':  { name: 'Tabular Node II',          price: 1200, deadlines: 60, dailyHours: 2, totalYield: 130, maxPurchase: 2, totalEarnings: 1560.00, dailyEarnings: 26.00 },
-  'pic-1':  { name: 'Visual Node I',            price: 3000, deadlines: 60, dailyHours: 2, totalYield: 140, maxPurchase: 1, totalEarnings: 4200.00, dailyEarnings: 70.00 },
-  'pic-2':  { name: 'Visual Node II',           price: 5000, deadlines: 60, dailyHours: 2, totalYield: 140, maxPurchase: 1, totalEarnings: 7000.00, dailyEarnings: 116.67 },
-  'vid-1':  { name: 'Video Node I',             price: 6000, deadlines: 60, dailyHours: 2, totalYield: 150, maxPurchase: 1, totalEarnings: 9000.00, dailyEarnings: 150.00 },
-  'vid-2':  { name: 'Video Node II',            price: 10000,deadlines: 60, dailyHours: 2, totalYield: 150, maxPurchase: 1, totalEarnings: 15000.00,dailyEarnings: 250.00 },
-}
+import { PACKAGE_INFO, PID_TO_CATEGORY, calcLevel } from '../lib/packages'
 
 const ADMIN_EMAIL = 'affiliatesflow@gmail.com'
 
@@ -31,7 +14,7 @@ export default function PowerItemsBuy() {
   const isAdmin = user?.email === ADMIN_EMAIL
 
   const pid    = searchParams.get('pid') ?? 'text-1'
-  const pkg    = ALL_PACKAGES[pid] ?? ALL_PACKAGES['text-1']
+  const pkg    = PACKAGE_INFO[pid] ?? PACKAGE_INFO['text-1']
 
   const [qty, setQty]           = useState(1)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -187,31 +170,33 @@ export default function PowerItemsBuy() {
         </div>
 
         {/* Product card */}
-        <div className="bg-surface-card border border-surface-border rounded-2xl p-4">
-          <div className="flex items-start justify-between gap-3">
+        <div className="bg-surface-card border border-surface-border rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-surface-border">
             <div>
-              <p className="text-brand-400 font-bold text-sm mb-3">{pkg.name}</p>
-              <div className="space-y-1.5 text-xs text-gray-400">
-                <div className="flex justify-between gap-8">
-                  <span>Daily training hours:</span>
-                  <span className="text-white font-semibold">{pkg.dailyHours} H</span>
-                </div>
-                <div className="flex justify-between gap-8">
-                  <span>Deadlines:</span>
-                  <span className="text-white font-semibold">{pkg.deadlines}Days</span>
-                </div>
-                <div className="flex justify-between gap-8">
-                  <span>Total yield:</span>
-                  <span className="text-white font-semibold">{pkg.totalYield}%</span>
-                </div>
-                <div className="flex justify-between gap-8">
-                  <span>Prices:</span>
-                  <span className="text-white font-semibold">${pkg.price} USDT</span>
-                </div>
-              </div>
+              <p className="text-brand-400 font-bold text-sm">{pkg.name}</p>
+              <p className="text-gray-500 text-xs mt-0.5">{pkg.deadlines}-day training cycle</p>
             </div>
-            <div className="w-24 h-20 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center shrink-0 border border-surface-border">
-              <span className="text-3xl">🖥️</span>
+            <div className="bg-brand-500/15 border border-brand-500/30 rounded-xl px-3 py-1.5 text-right">
+              <p className="text-brand-400 font-extrabold text-lg leading-none">+{pkg.totalYield}%</p>
+              <p className="text-gray-500 text-[10px]">total yield</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 divide-x divide-y divide-surface-border">
+            <div className="px-4 py-3">
+              <p className="text-[10px] text-gray-500">Duration</p>
+              <p className="text-white font-bold text-sm">{pkg.deadlines} Days</p>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-[10px] text-gray-500">Daily Earnings</p>
+              <p className="text-brand-400 font-bold text-sm">+{pkg.dailyEarnings.toFixed(2)} USDT</p>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-[10px] text-gray-500">Training Hours</p>
+              <p className="text-white font-bold text-sm">{pkg.dailyHours} H / day</p>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-[10px] text-gray-500">Total Earnings</p>
+              <p className="text-white font-bold text-sm">{(pkg.totalEarnings * qty).toLocaleString()} USDT</p>
             </div>
           </div>
         </div>
@@ -238,7 +223,7 @@ export default function PowerItemsBuy() {
           </div>
           <div className="flex justify-end mt-2">
             <span className="text-gray-500 text-xs">Price:&nbsp;</span>
-            <span className="text-red-400 font-bold text-sm">${pkg.price * qty}</span>
+            <span className="text-red-400 font-bold text-sm">{pkg.price * qty} USDT</span>
           </div>
         </div>
 
@@ -261,8 +246,8 @@ export default function PowerItemsBuy() {
       <div className="fixed bottom-0 left-0 right-0 max-w-sm mx-auto px-4 py-4 border-t border-surface-border bg-surface/95 backdrop-blur-md flex items-center justify-between"
            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
         <div>
-          <span className="text-gray-400 text-sm">Total amount: </span>
-          <span className="text-brand-400 font-extrabold text-base">${totalPrice}</span>
+          <span className="text-gray-400 text-sm">Total: </span>
+          <span className="text-brand-400 font-extrabold text-base">{totalPrice} USDT</span>
         </div>
         <button
           onClick={() => setShowConfirm(true)}

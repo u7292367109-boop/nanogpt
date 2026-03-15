@@ -20,8 +20,8 @@ export default function Share() {
   function handleShare() {
     if (navigator.share) {
       navigator.share({
-        title: 'Join NeoGPT',
-        text: 'Join me on NeoGPT and earn USDT by contributing idle computing power to AI training!',
+        title: 'Join UltraGPT',
+        text: 'Join me on UltraGPT and earn USDT by contributing idle computing power to AI training!',
         url: referralLink,
       })
     } else {

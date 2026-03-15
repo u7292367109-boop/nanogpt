@@ -27,7 +27,7 @@ export default function Tutorials() {
       <div className="px-4 pt-4 pb-8">
         <div className="flex items-center gap-2 mb-4">
           <BookOpen size={18} className="text-brand-400" />
-          <p className="text-gray-400 text-sm">Learn how to use NeoGPT</p>
+          <p className="text-gray-400 text-sm">Learn how to use UltraGPT</p>
         </div>
 
         <div className="card p-0 overflow-hidden">

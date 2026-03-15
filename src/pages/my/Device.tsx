@@ -34,7 +34,7 @@ function detectUA() {
   else if (ua.includes('Chrome/') && !ua.includes('Chromium')) br = 'Chrome'
   else if (ua.includes('Firefox/')) br = 'Firefox'
   else if (ua.includes('Safari/') && !ua.includes('Chrome')) br = 'Safari'
-  return { model, platform: br + ' · NeoGPT Node', os }
+  return { model, platform: br + ' · UltraGPT Node', os }
 }
 
 export default function Device() {
@@ -47,7 +47,7 @@ export default function Device() {
     var det = detectUA()
     supabase.from('devices').select('*').eq('user_id', user.id).maybeSingle().then(async function({ data }) {
       if (data) {
-        var needs = (data.model==='iPhone'&&det.model!=='iPhone')||data.os==='NeoGPT OS'||data.os==='Unknown OS'
+        var needs = (data.model==='iPhone'&&det.model!=='iPhone')||data.os==='UltraGPT OS'||data.os==='Unknown OS'
         if (needs) { await supabase.from('devices').update({ model: det.model, platform: det.platform, os: det.os }).eq('user_id', user.id); setDevice(Object.assign({}, data, det)) }
         else setDevice(data)
       } else {
@@ -101,7 +101,7 @@ export default function Device() {
             <p className="text-brand-300 text-xs font-semibold">Node Status</p>
           </div>
           <p className="text-gray-300 text-xs leading-relaxed">
-            Your device is registered as a General Computing Node in the NeoGPT network.
+            Your device is registered as a General Computing Node in the UltraGPT network.
             It contributes idle processing power to train AI models and earns USDT rewards.
           </p>
         </div>

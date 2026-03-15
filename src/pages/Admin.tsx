@@ -64,19 +64,37 @@ function Chip({ s }: { s: string }) {
 
 // ─── main component ───────────────────────────────────────────────────────────
 export default function Admin() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, loading } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('dashboard')
 
-  // guard
+  // guard: redirect non-admins once auth has resolved
   useEffect(() => {
-    if (user && user.email !== ADMIN_EMAIL) navigate('/home')
-  }, [user, navigate])
+    if (!loading && user && user.email !== ADMIN_EMAIL) navigate('/home')
+  }, [user, loading, navigate])
 
+  // Show spinner while auth is resolving
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-surface">
+        <div className="w-7 h-7 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // Auth resolved but not admin
   if (!user || user.email !== ADMIN_EMAIL) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-surface">
-        <p className="text-gray-400">Access denied</p>
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">Access denied</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="text-brand-400 text-sm hover:underline"
+          >
+            Go to login
+          </button>
+        </div>
       </div>
     )
   }
@@ -92,49 +110,73 @@ export default function Admin() {
   ]
 
   return (
-    <div className="min-h-screen bg-surface text-white">
-      {/* Top bar */}
-      <div className="sticky top-0 z-50 bg-surface-card border-b border-surface-border flex items-center justify-between px-4 py-3">
+    <div className="min-h-screen bg-surface text-white flex flex-col">
+      {/* ── Top bar ── */}
+      <header className="sticky top-0 z-50 bg-surface-card border-b border-surface-border flex items-center justify-between px-4 md:px-6 py-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-brand-500/20 flex items-center justify-center">
             <LayoutDashboard size={15} className="text-brand-400" />
           </div>
-          <span className="text-white font-bold text-sm">NeoGPT Admin</span>
+          <span className="text-white font-bold text-sm md:text-base">UltraGPT Admin</span>
+          <span className="hidden md:inline text-gray-600 text-xs ml-2">· {user.email}</span>
         </div>
         <button
           onClick={() => { signOut(); navigate('/login') }}
-          className="flex items-center gap-1.5 text-gray-400 text-xs hover:text-white"
+          className="flex items-center gap-1.5 text-gray-400 text-xs hover:text-white transition-colors"
         >
           <LogOut size={14} />
           Logout
         </button>
-      </div>
+      </header>
 
-      {/* Tab bar — horizontal scroll */}
-      <div className="flex gap-1 px-3 pt-3 pb-1 overflow-x-auto scrollbar-none">
-        {tabs.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              tab === id ? 'bg-brand-500 text-white' : 'bg-surface-muted text-gray-400 border border-surface-border'
-            }`}
-          >
-            <Icon size={13} />
-            {label}
-          </button>
-        ))}
-      </div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* ── Desktop sidebar ── */}
+        <aside className="hidden md:flex flex-col w-52 shrink-0 border-r border-surface-border bg-surface-card/50 p-3 gap-0.5">
+          {tabs.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left w-full ${
+                tab === id
+                  ? 'bg-brand-500 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-surface-muted'
+              }`}
+            >
+              <Icon size={15} />
+              {label}
+            </button>
+          ))}
+        </aside>
 
-      {/* Content */}
-      <div className="px-3 pb-10">
-        {tab === 'dashboard'   && <DashboardTab />}
-        {tab === 'users'       && <UsersTab />}
-        {tab === 'orders'      && <OrdersTab />}
-        {tab === 'deposits'    && <DepositsTab />}
-        {tab === 'withdrawals' && <WithdrawalsTab />}
-        {tab === 'kyc'         && <KycTab />}
-        {tab === 'broadcast'   && <BroadcastTab />}
+        {/* ── Main content area ── */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Mobile tab bar */}
+          <div className="md:hidden flex gap-1 px-3 pt-3 pb-1 overflow-x-auto scrollbar-none">
+            {tabs.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  tab === id ? 'bg-brand-500 text-white' : 'bg-surface-muted text-gray-400 border border-surface-border'
+                }`}
+              >
+                <Icon size={13} />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
+          <div className="px-3 md:px-6 pb-10 max-w-6xl">
+            {tab === 'dashboard'   && <DashboardTab />}
+            {tab === 'users'       && <UsersTab />}
+            {tab === 'orders'      && <OrdersTab />}
+            {tab === 'deposits'    && <DepositsTab />}
+            {tab === 'withdrawals' && <WithdrawalsTab />}
+            {tab === 'kyc'         && <KycTab />}
+            {tab === 'broadcast'   && <BroadcastTab />}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -189,7 +231,7 @@ function DashboardTab() {
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-3 pt-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-3">
       {cards.map(({ label, value, icon: Icon, color }) => (
         <div key={label} className="bg-surface-card border border-surface-border rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">

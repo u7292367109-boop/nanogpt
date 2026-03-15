@@ -25,7 +25,7 @@ function detectDeviceInfo() {
   else if (ua.includes('Chrome/') && !ua.includes('Chromium')) br = 'Chrome'
   else if (ua.includes('Firefox/')) br = 'Firefox'
   else if (ua.includes('Safari/') && !ua.includes('Chrome')) br = 'Safari'
-  return { model, platform: br + ' · NeoGPT Node', os }
+  return { model, platform: br + ' · UltraGPT Node', os }
 }
 
 interface Profile {
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       // Update stale device info (e.g. old placeholder values)
       const di = detectDeviceInfo()
-      const stale = data.os === 'NeoGPT OS' || data.os === 'Unknown OS' || data.model === 'Computing Node'
+      const stale = data.os === 'UltraGPT OS' || data.os === 'Unknown OS' || data.model === 'Computing Node'
       if (stale) {
         await supabase.from('devices').update({ model: di.model, platform: di.platform, os: di.os }).eq('user_id', userId)
       }
