@@ -52,6 +52,7 @@ export default function PowerItems() {
         </button>
       </div>
 
+      <div className="flex-1 overflow-y-auto overscroll-contain">
       {/* Category banner */}
       <div className={`mx-4 mt-4 rounded-2xl bg-gradient-to-br ${meta.color} border ${meta.glow} p-4 flex items-center justify-between`}>
         <div>
@@ -68,7 +69,7 @@ export default function PowerItems() {
       </div>
 
       {/* Package cards */}
-      <div className="px-4 mt-4 space-y-4 pb-8">
+      <div className="px-4 mt-4 space-y-4 pb-8 overscroll-contain">
         {packages.map((pkg) => {
           const dailyRate = ((pkg.totalYield / pkg.deadlines)).toFixed(2)
           return (
@@ -137,6 +138,7 @@ export default function PowerItems() {
             </div>
           )
         })}
+      </div>
       </div>
     </div>
   )

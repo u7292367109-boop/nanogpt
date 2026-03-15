@@ -108,6 +108,10 @@ export default function PowerItemsBuy() {
       await refreshProfile()
     }
 
+    // Update daily_yield to reflect newly purchased package earnings
+    const newDailyYield = parseFloat(((fresh.daily_yield ?? 0) + pkg.dailyEarnings * qty).toFixed(4))
+    await supabase.from('assets').update({ daily_yield: newDailyYield }).eq('user_id', user.id)
+
     await refreshAssets()
     setLoading(false)
     setShowConfirm(false)
@@ -243,7 +247,7 @@ export default function PowerItemsBuy() {
       </div>
 
       {/* Bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-sm mx-auto px-4 py-4 border-t border-surface-border bg-surface/95 backdrop-blur-md flex items-center justify-between"
+      <div className="fixed bottom-0 left-0 right-0 md:left-56 px-4 py-4 border-t border-surface-border bg-surface/95 backdrop-blur-md flex items-center justify-between"
            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
         <div>
           <span className="text-gray-400 text-sm">Total: </span>

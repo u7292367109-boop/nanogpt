@@ -59,7 +59,7 @@ export default function Task() {
       <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
-            <span className="text-white font-extrabold text-xs">N</span>
+            <span className="text-white font-extrabold text-xs">U</span>
           </div>
           <span className="text-white font-bold text-base">{t('task_center')}</span>
         </div>

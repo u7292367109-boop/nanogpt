@@ -9,6 +9,7 @@ export default function NodePartner() {
         <h1 className="text-white font-semibold">Node Partner</h1>
       </header>
 
+      <div className="flex-1 overflow-y-auto overscroll-contain">
       <div className="px-4 py-6 space-y-6 pb-10">
         {/* Hero */}
         <div className="text-center">
@@ -71,6 +72,7 @@ export default function NodePartner() {
         </div>
 
         <button className="btn-primary">Apply Now</button>
+      </div>
       </div>
     </div>
   )

@@ -7,9 +7,6 @@ import { supabase } from '../../lib/supabase'
 import { pushAndRecord } from '../../lib/notify'
 
 // ── Wallet addresses per network ─────────────────────────────────────────
-// Update WALLET_ADDRESS with the real Trust Wallet TRC-20 address
-const WALLET_ADDRESS = 'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE'
-
 const NETWORKS = [
   {
     id: 'USDT-TRC20',
@@ -19,7 +16,7 @@ const NETWORKS = [
     icon: '🟢',
     minDeposit: 10,
     fee: 'Free',
-    wallet: WALLET_ADDRESS,
+    wallet: 'TMmXkT82RznZHbCHyJ4jmStDKHpy4ZfG7b',
     confirmations: '~1 min',
   },
   {
@@ -30,7 +27,7 @@ const NETWORKS = [
     icon: '🔵',
     minDeposit: 50,
     fee: '~$5',
-    wallet: WALLET_ADDRESS,
+    wallet: '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~3 min',
   },
   {
@@ -41,8 +38,30 @@ const NETWORKS = [
     icon: '🟡',
     minDeposit: 10,
     fee: 'Free',
-    wallet: WALLET_ADDRESS,
+    wallet: '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
     confirmations: '~1 min',
+  },
+  {
+    id: 'USDC-BEP20',
+    label: 'USDC',
+    sub: 'BEP-20 · BSC',
+    badge: '',
+    icon: '🔶',
+    minDeposit: 10,
+    fee: 'Free',
+    wallet: '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
+    confirmations: '~1 min',
+  },
+  {
+    id: 'USDC-ERC20',
+    label: 'USDC',
+    sub: 'ERC-20 · Ethereum',
+    badge: '',
+    icon: '🔷',
+    minDeposit: 50,
+    fee: '~$5',
+    wallet: '0x0Ac277750e21579Df28941CE8419fd3305a6bDB7',
+    confirmations: '~3 min',
   },
 ]
 
@@ -52,6 +71,8 @@ const PRESETS = [50, 100, 500, 1000]
 const USDT_TRC20_CONTRACT = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj'
 const USDT_ERC20_CONTRACT = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
 const USDT_BEP20_CONTRACT = '0x55d398326f99059fF775485246999027B3197955'
+const USDC_ERC20_CONTRACT = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+const USDC_BEP20_CONTRACT = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d'
 
 function getPaymentUri(network: typeof NETWORKS[0], amount: string): string {
   const amt = parseFloat(amount) || 0
@@ -66,6 +87,14 @@ function getPaymentUri(network: typeof NETWORKS[0], amount: string): string {
     const amountWei = Math.floor(amt * 1e6)
     return `ethereum:${USDT_BEP20_CONTRACT}@56/transfer?address=${network.wallet}&uint256=${amountWei}`
   }
+  if (network.id === 'USDC-ERC20') {
+    const amountWei = Math.floor(amt * 1e6)
+    return `ethereum:${USDC_ERC20_CONTRACT}/transfer?address=${network.wallet}&uint256=${amountWei}`
+  }
+  if (network.id === 'USDC-BEP20') {
+    const amountWei = Math.floor(amt * 1e6)
+    return `ethereum:${USDC_BEP20_CONTRACT}@56/transfer?address=${network.wallet}&uint256=${amountWei}`
+  }
   return network.wallet
 }
 
@@ -79,6 +108,12 @@ function getTrustWalletUrl(network: typeof NETWORKS[0], amount: string): string 
   }
   if (network.id === 'USDT-BEP20') {
     return `https://link.trustwallet.com/send?asset=c20000714_t${USDT_BEP20_CONTRACT}&address=${network.wallet}&amount=${amt}`
+  }
+  if (network.id === 'USDC-ERC20') {
+    return `https://link.trustwallet.com/send?asset=c60_t${USDC_ERC20_CONTRACT}&address=${network.wallet}&amount=${amt}`
+  }
+  if (network.id === 'USDC-BEP20') {
+    return `https://link.trustwallet.com/send?asset=c20000714_t${USDC_BEP20_CONTRACT}&address=${network.wallet}&amount=${amt}`
   }
   return 'https://trustwallet.com'
 }
@@ -139,7 +174,7 @@ function CheckoutStep({
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-gray-500 text-xs">Amount to send</span>
-            <span className="text-brand-400 font-extrabold text-xl">{amount} <span className="text-sm text-gray-400">USDT</span></span>
+            <span className="text-brand-400 font-extrabold text-xl">{amount} <span className="text-sm text-gray-400">{network.label}</span></span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-500 text-xs">Network</span>
@@ -159,7 +194,7 @@ function CheckoutStep({
       {/* QR + Address */}
       <div className="card text-center space-y-4">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-          Send exactly <span className="text-white">{amount} USDT</span> to this address
+          Send exactly <span className="text-white">{amount} {network.label}</span> to this address
         </p>
 
         {/* QR code — encodes payment URI so wallet apps auto-fill token + amount */}
@@ -291,7 +326,7 @@ export default function Deposit() {
             <div>
               <h3 className="text-white font-extrabold text-xl mb-1">Payment Submitted</h3>
               <p className="text-gray-400 text-sm">
-                Your deposit of <span className="text-white font-bold">{amount} USDT</span> is being processed.
+                Your deposit of <span className="text-white font-bold">{amount} {network.label}</span> is being processed.
               </p>
             </div>
             <div className="bg-surface-muted rounded-2xl p-4 text-left space-y-2">
@@ -393,7 +428,7 @@ export default function Deposit() {
                 onChange={e => setAmount(e.target.value)}
                 min={network.minDeposit}
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">USDT</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">{network.label}</span>
             </div>
 
             {/* Quick presets */}
@@ -417,7 +452,7 @@ export default function Deposit() {
             {amt > 0 && (
               <div className="flex items-center justify-between pt-2 border-t border-surface-border">
                 <span className="text-xs text-gray-500">You will receive</span>
-                <span className="text-brand-400 font-extrabold">{amt.toFixed(2)} USDT</span>
+                <span className="text-brand-400 font-extrabold">{amt.toFixed(2)} {network.label}</span>
               </div>
             )}
           </div>
@@ -430,7 +465,7 @@ export default function Deposit() {
             <div>
               <p className="text-amber-300 text-xs font-bold mb-0.5">Important Notice</p>
               <p className="text-gray-400 text-xs leading-relaxed">
-                Only send <strong className="text-white">USDT</strong> via the{' '}
+                Only send <strong className="text-white">{network.label}</strong> via the{' '}
                 <strong className="text-white">{network.sub}</strong> network to avoid permanent loss.
                 Minimum deposit is <strong className="text-white">{network.minDeposit} USDT</strong>.
               </p>
