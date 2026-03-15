@@ -48,6 +48,41 @@ const NETWORKS = [
 
 const PRESETS = [50, 100, 500, 1000]
 
+// ── Payment URIs (pre-fill wallet apps when QR is scanned) ───────────────
+const USDT_TRC20_CONTRACT = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj'
+const USDT_ERC20_CONTRACT = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+const USDT_BEP20_CONTRACT = '0x55d398326f99059fF775485246999027B3197955'
+
+function getPaymentUri(network: typeof NETWORKS[0], amount: string): string {
+  const amt = parseFloat(amount) || 0
+  if (network.id === 'USDT-TRC20') {
+    return `tron:${network.wallet}?amount=${amt}&token=${USDT_TRC20_CONTRACT}`
+  }
+  if (network.id === 'USDT-ERC20') {
+    const amountWei = Math.floor(amt * 1e6)
+    return `ethereum:${USDT_ERC20_CONTRACT}/transfer?address=${network.wallet}&uint256=${amountWei}`
+  }
+  if (network.id === 'USDT-BEP20') {
+    const amountWei = Math.floor(amt * 1e6)
+    return `ethereum:${USDT_BEP20_CONTRACT}@56/transfer?address=${network.wallet}&uint256=${amountWei}`
+  }
+  return network.wallet
+}
+
+function getTrustWalletUrl(network: typeof NETWORKS[0], amount: string): string {
+  const amt = parseFloat(amount) || 0
+  if (network.id === 'USDT-TRC20') {
+    return `https://link.trustwallet.com/send?asset=c195_t0${USDT_TRC20_CONTRACT}&address=${network.wallet}&amount=${amt}`
+  }
+  if (network.id === 'USDT-ERC20') {
+    return `https://link.trustwallet.com/send?asset=c60_t${USDT_ERC20_CONTRACT}&address=${network.wallet}&amount=${amt}`
+  }
+  if (network.id === 'USDT-BEP20') {
+    return `https://link.trustwallet.com/send?asset=c20000714_t${USDT_BEP20_CONTRACT}&address=${network.wallet}&amount=${amt}`
+  }
+  return 'https://trustwallet.com'
+}
+
 // Simple countdown timer
 function useCountdown(seconds: number) {
   const [remaining, setRemaining] = useState(seconds)
@@ -74,6 +109,8 @@ function CheckoutStep({
 }) {
   const [copied, setCopied] = useState(false)
   const timer = useCountdown(30 * 60) // 30-min window
+  const paymentUri = getPaymentUri(network, amount)
+  const trustUrl   = getTrustWalletUrl(network, amount)
 
   function copy() {
     navigator.clipboard.writeText(network.wallet)
@@ -125,16 +162,29 @@ function CheckoutStep({
           Send exactly <span className="text-white">{amount} USDT</span> to this address
         </p>
 
-        {/* QR code — generated client-side (no external API) */}
+        {/* QR code — encodes payment URI so wallet apps auto-fill token + amount */}
         <div className="w-48 h-48 bg-white rounded-2xl mx-auto flex items-center justify-center p-3 shadow-[0_0_30px_rgba(0,210,106,0.15)]">
           <QRCode
-            value={network.wallet}
+            value={paymentUri}
             size={160}
             bgColor="#FFFFFF"
             fgColor="#000000"
-            style={{ width: '100%', height: '100%' }}
           />
         </div>
+
+        {/* Trust Wallet deep-link button */}
+        <a
+          href={trustUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#3375BB]/20 border border-[#3375BB]/30 text-[#6aaff5] font-bold text-sm hover:bg-[#3375BB]/30 transition-all"
+        >
+          <svg viewBox="0 0 40 40" className="w-5 h-5" fill="none">
+            <rect width="40" height="40" rx="10" fill="#3375BB"/>
+            <path d="M20 8C13.373 8 8 13.373 8 20s5.373 12 12 12 12-5.373 12-12S26.627 8 20 8zm0 4l8 7h-3v8h-4v-5h-2v5h-4v-8h-3l8-7z" fill="white"/>
+          </svg>
+          Open in Trust Wallet
+        </a>
 
         {/* Address box */}
         <div className="bg-surface-muted rounded-xl px-4 py-3 flex items-start gap-3 text-left">

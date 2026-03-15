@@ -25,7 +25,9 @@ export default function Layout({
         <TopBar title={title} showBack={showBack} showActions={showActions} />
       )}
       <main className="flex-1 overflow-y-auto overscroll-contain">
-        {children}
+        <div className="md:max-w-2xl md:mx-auto">
+          {children}
+        </div>
       </main>
       {showBottomNav && <BottomNav />}
     </div>

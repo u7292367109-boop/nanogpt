@@ -16,7 +16,7 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav md:hidden">
       {navItems.map(({ path, icon: Icon, label }) => {
         const active = pathname === path ||
           (path === '/profile' && (pathname === '/profile' || pathname.startsWith('/my/'))) ||

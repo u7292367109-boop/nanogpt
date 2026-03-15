@@ -67,11 +67,32 @@ export default function Admin() {
   const { user, signOut, loading } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('dashboard')
+  const [depositToast, setDepositToast] = useState<{ amount: number } | null>(null)
+  const [depositBadge, setDepositBadge] = useState(0)
 
   // guard: redirect non-admins once auth has resolved
   useEffect(() => {
     if (!loading && user && user.email !== ADMIN_EMAIL) navigate('/home')
   }, [user, loading, navigate])
+
+  // Realtime: show alert whenever a new deposit is submitted
+  useEffect(() => {
+    if (!user || user.email !== ADMIN_EMAIL) return
+    const channel = adminSupabase
+      .channel('admin-deposit-alerts')
+      .on(
+        'postgres_changes' as never,
+        { event: 'INSERT', schema: 'public', table: 'transactions', filter: 'type=eq.deposit' },
+        (payload: { new: TxRow }) => {
+          const tx = payload.new
+          setDepositToast({ amount: tx.amount })
+          setDepositBadge(n => n + 1)
+          setTimeout(() => setDepositToast(null), 8000)
+        }
+      )
+      .subscribe()
+    return () => { adminSupabase.removeChannel(channel) }
+  }, [user])
 
   // Show spinner while auth is resolving
   if (loading) {
@@ -111,6 +132,26 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-surface text-white flex flex-col">
+
+      {/* ── Deposit toast notification ── */}
+      {depositToast && (
+        <div className="fixed top-4 right-4 z-[100] flex items-center gap-3 bg-[#0c1a0f] border border-brand-500/40 text-white rounded-2xl px-4 py-3 shadow-[0_0_30px_rgba(0,210,106,0.2)] animate-fade-in">
+          <div className="w-9 h-9 rounded-xl bg-brand-500/20 flex items-center justify-center shrink-0">
+            <ArrowDownCircle size={18} className="text-brand-400" />
+          </div>
+          <div>
+            <p className="font-bold text-sm text-brand-400">New Deposit!</p>
+            <p className="text-xs text-gray-400">{depositToast.amount.toFixed(2)} USDT — pending confirmation</p>
+          </div>
+          <button
+            onClick={() => setDepositToast(null)}
+            className="ml-2 text-gray-600 hover:text-white transition-colors text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* ── Top bar ── */}
       <header className="sticky top-0 z-50 bg-surface-card border-b border-surface-border flex items-center justify-between px-4 md:px-6 py-3">
         <div className="flex items-center gap-2">
@@ -135,7 +176,7 @@ export default function Admin() {
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setTab(id)}
+              onClick={() => { setTab(id); if (id === 'deposits') setDepositBadge(0) }}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left w-full ${
                 tab === id
                   ? 'bg-brand-500 text-white'
@@ -144,6 +185,11 @@ export default function Admin() {
             >
               <Icon size={15} />
               {label}
+              {id === 'deposits' && depositBadge > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {depositBadge}
+                </span>
+              )}
             </button>
           ))}
         </aside>

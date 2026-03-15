@@ -18,7 +18,7 @@ export default function TopBar({ title, showBack, showActions = true }: TopBarPr
             {title && <span className="font-bold text-white text-base">{title}</span>}
           </Link>
         ) : (
-          <Link to="/home" className="flex items-center gap-2">
+          <Link to="/home" className="flex items-center gap-2 md:hidden">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-brand-sm">
               <span className="text-white font-extrabold text-sm">U</span>
             </div>
