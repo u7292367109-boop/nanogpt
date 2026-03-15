@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { ShoppingBag, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 import Layout from '../../components/Layout'
 import { useAuth } from '../../context/AuthContext'
@@ -49,7 +49,19 @@ function getEndDate(order: Order): Date {
 }
 
 function getDaysRemaining(order: Order): number {
-  return Math.max(0, Math.ceil((getEndDate(order).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+  return Math.max(0, Math.floor((getEndDate(order).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+}
+
+function getTimeRemaining(order: Order): string {
+  const msLeft = Math.max(0, getEndDate(order).getTime() - Date.now())
+  if (msLeft === 0) return 'Completing soon'
+  const totalMins = Math.floor(msLeft / (60 * 1000))
+  const days  = Math.floor(totalMins / (60 * 24))
+  const hours = Math.floor((totalMins % (60 * 24)) / 60)
+  const mins  = totalMins % 60
+  if (days > 0)  return `${days}d ${hours}h left`
+  if (hours > 0) return `${hours}h ${mins}m left`
+  return `${mins}m left`
 }
 
 function getProgressPct(order: Order): number {
@@ -67,6 +79,14 @@ export default function Orders() {
   const [orders, setOrders]   = useState<Order[]>([])
   const [transactions, setTx] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [, setTick] = useState(0) // forces re-render so countdowns update live
+
+  // Re-render every minute so countdown values stay current
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  useEffect(() => {
+    tickRef.current = setInterval(() => setTick(n => n + 1), 60 * 1000)
+    return () => { if (tickRef.current) clearInterval(tickRef.current) }
+  }, [])
 
   const loadData = useCallback(async () => {
     if (!user) return
@@ -203,8 +223,8 @@ export default function Orders() {
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-gray-500">
                           <span>{t('completes')} {endDate.toLocaleDateString()}</span>
-                          <span className={daysLeft <= 5 ? 'text-amber-400 font-bold' : ''}>
-                            {daysLeft === 0 ? t('completing') : `${daysLeft}${t('days_left')}`}
+                          <span className={daysLeft <= 2 ? 'text-amber-400 font-bold' : ''}>
+                            {getTimeRemaining(order)}
                           </span>
                         </div>
                       </div>

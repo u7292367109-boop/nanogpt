@@ -88,8 +88,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
     return (
       <>
         <DesktopSidebar />
-        <div className="w-full h-screen overflow-hidden md:ml-56">
-          {children}
+        {/* On md+: offset by sidebar (224px) and cap content at max-w-2xl centered */}
+        <div className="w-full h-screen overflow-hidden md:ml-56 bg-[#0a1a0e]">
+          <div className="h-full md:max-w-2xl md:mx-auto">
+            {children}
+          </div>
         </div>
       </>
     )
